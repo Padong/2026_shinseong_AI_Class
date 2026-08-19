@@ -1,6 +1,13 @@
 # 2026_shinseong_211_AI class
 
 <details>
+<summary>2026 인공지능 기초 수업자료 링크</summary>
+- [1단원] (https://canva.link/ohxx81dg1sthqt5)
+</details>
+
+---
+
+<details>
 <summary>GitHub README.md 작성법 가이드</summary>
 
 > 이 문서는 GitHub 저장소(repository)의 README.md 파일을 어떻게 작성하는지 안내하는 가이드입니다.
