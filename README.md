@@ -2,7 +2,7 @@
 
 <details>
 <summary>2026 인공지능 기초 수업자료 링크</summary>
-- [1단원] (https://canva.link/ohxx81dg1sthqt5)
+- [1단원] (https://canva.link/ohxx81dg1sthqt5) -> 2-5 인기초(탐색트리 완)
 </details>
 
 ---
