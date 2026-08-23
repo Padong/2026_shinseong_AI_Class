@@ -1,0 +1,38 @@
+name: Build index.html from README
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'README.md'
+      - 'build_index.py'
+      - 'template_style.css'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 저장소 체크아웃
+        uses: actions/checkout@v4
+
+      - name: 파이썬 설치
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: 의존 패키지 설치
+        run: pip install markdown
+
+      - name: index.html 빌드
+        run: python build_index.py
+
+      - name: 변경사항 있으면 커밋 & 푸시
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git diff --staged --quiet || git commit -m "index.html 자동 빌드 (README.md 반영)"
+          git push
