@@ -1,3 +1,8 @@
+---
+layout: default
+title: 2026 신성여고 정보과학·인공지능 수업
+---
+
 # 2026_shinseong_AI class
 
 <details>
