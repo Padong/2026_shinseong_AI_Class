@@ -2,7 +2,9 @@
 
 <details>
 <summary>2026 인공지능 기초 수업자료 링크</summary>
-- [1단원] (https://canva.link/ohxx81dg1sthqt5)
+
+- [1단원 자료](https://canva.link/ohxx81dg1sthqt5)
+
 </details>
 
 ---
@@ -43,7 +45,7 @@ README는 마크다운 문법으로 작성합니다. 핵심 문법만 익히면 
 <details>
 <summary>마크다운 기초 문법 보기 (클릭)</summary>
 
-```markdown
+````markdown
 # 제목
 **굵게**  *기울임*  ~~취소선~~
 
@@ -51,14 +53,14 @@ README는 마크다운 문법으로 작성합니다. 핵심 문법만 익히면 
 1. 순서 목록
 
 `코드`
-​```python
+```python
 print("코드 블록")
-​```
+```
 
 [링크](https://example.com)
 ![이미지](이미지주소.png)
 > 인용문
-```
+````
 
 </details>
 
@@ -66,7 +68,7 @@ print("코드 블록")
 
 ## 4. 기본 구조 (권장 순서)
 
-```markdown
+````markdown
 # 프로젝트 이름
 
 한 줄 소개 (이 프로젝트가 무엇을 하는지)
@@ -78,16 +80,16 @@ print("코드 블록")
 실행 화면이나 예시 이미지 (선택)
 
 ## 설치 방법 (Installation)
-​```bash
+```bash
 git clone https://github.com/사용자명/저장소명.git
 cd 저장소명
 pip install -r requirements.txt
-​```
+```
 
 ## 사용 방법 (Usage)
-​```bash
+```bash
 python main.py
-​```
+```
 
 ## 기술 스택 (Tech Stack)
 - Python 3.11
@@ -95,12 +97,12 @@ python main.py
 - SQLite
 
 ## 폴더 구조
-​```
+```
 project/
 ├── src/
 ├── tests/
 └── README.md
-​```
+```
 
 ## 기여 방법 (Contributing)
 1. 이 저장소를 Fork 합니다
@@ -113,7 +115,7 @@ MIT License
 
 ## 작성자 (Author)
 - 이름 / 이메일 / GitHub 프로필 링크
-```
+````
 
 ---
 
@@ -142,7 +144,7 @@ MIT License
 
 ### ⑤ 폴더 구조
 - 프로젝트가 여러 파일/폴더로 구성되어 있다면 트리 구조로 표시
-- 코드 블록(```) 안에 작성하면 정렬이 깔끔함
+- 코드 블록 안에 작성하면 정렬이 깔끔함
 
 ---
 
@@ -153,19 +155,19 @@ GitHub 마크다운은 `<details>`와 `<summary>` HTML 태그를 지원해서, �
 
 ### 기본 문법
 
-```markdown
+````markdown
 <details>
 <summary>클릭하면 펼쳐집니다</summary>
 
 여기에 숨겨질 내용을 작성합니다.
 마크다운 문법도 그대로 사용할 수 있습니다.
 
-​```bash
+```bash
 pip install -r requirements.txt
-​```
+```
 
 </details>
-```
+````
 
 - `<summary>` 태그 안의 텍스트가 접혀있을 때 보이는 제목입니다
 - `</summary>` 다음 줄은 **반드시 한 줄 띄워야** 안의 마크다운(코드블록, 목록 등)이 정상적으로 렌더링됩니다
@@ -173,31 +175,31 @@ pip install -r requirements.txt
 
 ### 활용 예시 — 운영체제별 설치 방법
 
-```markdown
+````markdown
 ## 설치 방법
 
 <details>
 <summary>Windows</summary>
 
-​```bash
+```bash
 python -m venv venv
 venv\Scripts\activate
 pip install -r requirements.txt
-​```
+```
 
 </details>
 
 <details>
 <summary>macOS / Linux</summary>
 
-​```bash
+```bash
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
-​```
+```
 
 </details>
-```
+````
 
 ### 활용 예시 — 스크린샷 여러 장 숨기기
 
@@ -225,7 +227,7 @@ pip install -r requirements.txt
 ```
 
 **좋은 예시**
-```markdown
+````markdown
 # 할일 관리 앱 (Todo App)
 
 React와 Firebase로 만든 간단한 할일 관리 웹 앱입니다.
@@ -235,12 +237,12 @@ React와 Firebase로 만든 간단한 할일 관리 웹 앱입니다.
 - 실시간 데이터 동기화
 
 ## 설치 방법
-​```bash
+```bash
 git clone https://github.com/username/todo-app.git
 npm install
 npm start
-​```
 ```
+````
 
 ---
 
