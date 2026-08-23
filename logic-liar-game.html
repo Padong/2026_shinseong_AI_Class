@@ -1,0 +1,1213 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>[모둠 활동] 수학적 연역 추론 기반 논리 라이어 게임</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: { 50: '#f0fdf4', 100: '#dcfce7', 500: '#22c55e', 600: '#16a34a', 700: '#15803d' },
+                        docsBlue: { 50: '#f0f7ff', 100: '#e0effe', 500: '#3b82f6', 600: '#2563eb', 700: '#1d4ed8' }
+                    },
+                    fontFamily: { sans: ['Noto Sans KR', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { background-color: #f8fafc; font-family: 'Noto Sans KR', sans-serif; }
+        .a4-paper {
+            width: 100%; max-width: 850px; min-height: 400px; background: #ffffff;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.08), 0 8px 10px -6px rgba(0,0,0,0.01);
+            border: 1px solid #e2e8f0; border-radius: 4px; margin: 20px auto; padding: 48px 56px; position: relative;
+        }
+        .star-rating i { cursor: pointer; transition: transform 0.1s ease; }
+        .star-rating i:hover { transform: scale(1.2); }
+        .doc-input { border: none; border-bottom: 1.5px solid #cbd5e1; background: transparent; outline: none; transition: all 0.2s ease; }
+        .doc-input:focus { border-bottom-color: #2563eb; background-color: #eff6ff; }
+        .doc-input:disabled { color: #334155; border-bottom-style: dotted; }
+        .doc-textarea { width: 100%; border: 1px solid #cbd5e1; border-radius: 6px; padding: 10px 12px; outline: none; transition: border-color 0.2s, box-shadow 0.2s; resize: vertical; }
+        .doc-textarea:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.15); }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .step-badge { width: 28px; height: 28px; border-radius: 9999px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 12px; }
+        .step-badge.active { background: #4f46e5; color: white; }
+        .step-badge.done { background: #16a34a; color: white; }
+        .step-badge.pending { background: #e2e8f0; color: #94a3b8; }
+        .step-line { flex: 1; height: 2px; background: #e2e8f0; }
+        .step-line.done { background: #16a34a; }
+        @media print {
+            body { background: white !important; padding: 0 !important; }
+            .no-print { display: none !important; }
+            .a4-paper { box-shadow: none !important; border: none !important; margin: 0 !important; padding: 0 !important; width: 100% !important; max-width: 100% !important; }
+            .doc-textarea, .doc-input { border: none !important; background: transparent !important; padding: 2px 0 !important; }
+        }
+    </style>
+</head>
+<body class="text-slate-800 antialiased min-h-screen flex flex-col">
+
+    <!-- TOP NAV -->
+    <header class="no-print bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center space-x-3">
+                    <div class="p-2 bg-indigo-600 text-white rounded-lg shadow"><i class="fa-solid fa-user-secret text-xl"></i></div>
+                    <div>
+                        <div class="flex items-center space-x-2">
+                            <span class="font-bold text-slate-900 text-lg">논리 라이어 게임 모둠 활동지</span>
+                            <span class="px-2 py-0.5 text-xs font-semibold bg-indigo-100 text-indigo-700 rounded-full">모둠 연동 v3.0</span>
+                        </div>
+                        <div class="flex items-center space-x-3 text-xs text-slate-500 mt-0.5">
+                            <span id="save-status" class="flex items-center text-emerald-600 font-medium"><i class="fa-solid fa-cloud-arrow-up mr-1.5"></i> 대기 중</span>
+                            <span id="session-badge" class="hidden items-center text-indigo-600 font-semibold"><i class="fa-solid fa-people-group mr-1"></i><span id="session-badge-text"></span></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button onclick="window.print()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg shadow-sm transition flex items-center space-x-2">
+                        <i class="fa-solid fa-print"></i><span class="hidden sm:inline">인쇄 / PDF 저장</span>
+                    </button>
+                    <button onclick="leaveGroup()" id="btn-leave" class="hidden px-3 py-2 text-slate-400 hover:text-rose-600 text-sm rounded-lg hover:bg-rose-50 transition items-center space-x-1.5" title="다른 모둠으로 참가">
+                        <i class="fa-solid fa-right-from-bracket"></i><span class="hidden sm:inline">모둠 나가기</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP PROGRESS -->
+        <div class="bg-slate-50 border-t border-slate-200 px-4 py-2.5">
+            <div class="max-w-2xl mx-auto flex items-center">
+                <div class="flex items-center"><div id="badge-1" class="step-badge active">1</div><span class="ml-1.5 text-xs font-bold text-slate-700 hidden sm:inline">모둠 입장</span></div>
+                <div id="line-1" class="step-line mx-2"></div>
+                <div class="flex items-center"><div id="badge-2" class="step-badge pending">2</div><span class="ml-1.5 text-xs font-bold text-slate-500 hidden sm:inline">역할 확인</span></div>
+                <div id="line-2" class="step-line mx-2"></div>
+                <div class="flex items-center"><div id="badge-3" class="step-badge pending">3</div><span class="ml-1.5 text-xs font-bold text-slate-500 hidden sm:inline">설명 준비</span></div>
+                <div id="line-3" class="step-line mx-2"></div>
+                <div class="flex items-center"><div id="badge-4" class="step-badge pending">4</div><span class="ml-1.5 text-xs font-bold text-slate-500 hidden sm:inline">명제 추론</span></div>
+                <div id="line-4" class="step-line mx-2"></div>
+                <div class="flex items-center"><div id="badge-5" class="step-badge pending">5</div><span class="ml-1.5 text-xs font-bold text-slate-500 hidden sm:inline">라이어 투표</span></div>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow py-6 px-2 sm:px-4">
+
+        <!-- ================= STEP 1: 모둠 입장 ================= -->
+        <section id="step-join" class="a4-paper">
+            <div class="text-center border-b-2 border-slate-900 pb-5 mb-6">
+                <div class="inline-block px-3 py-1 bg-indigo-50 border border-indigo-200 text-indigo-700 rounded-full text-xs font-extrabold uppercase tracking-wider mb-2">STEP 1</div>
+                <h1 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">모둠에 입장하기</h1>
+                <p class="text-xs sm:text-sm text-slate-500 mt-1 font-medium">같은 모둠원은 <strong>모둠명을 똑같이</strong> 입력하면 서로 연결됩니다. 처음 입장하는 사람이 모둠 설정을 만듭니다.</p>
+            </div>
+
+            <div class="max-w-md mx-auto space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 mb-1">모둠명 <span class="text-rose-500">*</span></label>
+                    <input type="text" id="join-group" class="doc-input w-full font-bold text-slate-800 px-1 py-1.5 text-base" placeholder="예: 2모둠 (피타고라스)">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 mb-1">나의 순번 <span class="text-rose-500">*</span></label>
+                        <input type="number" id="join-turn" min="1" max="8" class="doc-input w-full font-bold text-slate-800 px-1 py-1.5" placeholder="1">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 mb-1">이름 <span class="text-rose-500">*</span></label>
+                        <input type="text" id="join-name" class="doc-input w-full font-bold text-slate-800 px-1 py-1.5" placeholder="홍길동">
+                    </div>
+                </div>
+
+                <div id="join-new-group-fields" class="bg-indigo-50/60 border border-indigo-100 rounded-lg p-3.5 space-y-3">
+                    <p class="text-xs text-indigo-800 font-semibold"><i class="fa-solid fa-circle-info mr-1"></i> 아직 만들어지지 않은 모둠명이면, 아래 설정으로 새 모둠이 생성됩니다.</p>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 mb-1">모둠 총 인원</label>
+                            <input type="number" id="join-total" min="3" max="8" value="4" class="w-full text-sm p-2 border border-slate-300 rounded-lg outline-none focus:border-indigo-600">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 mb-1">제시어 카테고리</label>
+                            <select id="join-category" class="w-full text-sm p-2 border border-slate-300 rounded-lg outline-none focus:border-indigo-600">
+                                <option value="math">수학 개념</option>
+                                <option value="fruit">과일/음식</option>
+                                <option value="animal">동물/자연</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <button onclick="joinGroup()" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-md transition flex items-center justify-center space-x-2">
+                    <i class="fa-solid fa-door-open"></i><span>모둠 입장하기</span>
+                </button>
+                <p id="join-error" class="hidden text-xs text-rose-600 font-semibold text-center"></p>
+            </div>
+        </section>
+
+        <!-- ================= STEP 2: 역할/제시어 확인 ================= -->
+        <section id="step-reveal" class="a4-paper hidden">
+            <div class="text-center border-b-2 border-slate-900 pb-5 mb-6">
+                <div class="inline-block px-3 py-1 bg-indigo-50 border border-indigo-200 text-indigo-700 rounded-full text-xs font-extrabold uppercase tracking-wider mb-2">STEP 2</div>
+                <h1 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">나의 비밀 역할 확인</h1>
+                <p class="text-xs sm:text-sm text-slate-500 mt-1 font-medium">화면을 다른 모둠원에게 보여주지 마세요. 나만 확인합니다.</p>
+            </div>
+
+            <div id="reveal-result-box" class="max-w-md mx-auto rounded-xl p-6 text-center mb-5 border-2 min-h-[140px] flex flex-col items-center justify-center"></div>
+
+            <div class="max-w-md mx-auto bg-slate-50 border border-slate-200 rounded-lg p-3.5 mb-5">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs font-bold text-slate-600"><i class="fa-solid fa-people-group mr-1"></i> 모둠 입장 현황</span>
+                    <button onclick="refreshGroup()" class="no-print text-xs text-indigo-600 hover:text-indigo-800 font-medium"><i class="fa-solid fa-rotate mr-1"></i>새로고침</button>
+                </div>
+                <div id="member-status-list" class="flex flex-wrap gap-1.5 text-xs"></div>
+            </div>
+
+            <div class="max-w-md mx-auto flex justify-center">
+                <button onclick="goToStep(3)" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-md transition flex items-center space-x-2">
+                    <span>확인했어요, 다음 단계로</span><i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+        </section>
+
+        <!-- ================= STEP 3: 설명 준비 ================= -->
+        <section id="step-prep" class="a4-paper hidden">
+            <div class="text-center border-b-2 border-slate-900 pb-5 mb-6">
+                <div class="inline-block px-3 py-1 bg-indigo-50 border border-indigo-200 text-indigo-700 rounded-full text-xs font-extrabold uppercase tracking-wider mb-2">STEP 3</div>
+                <h1 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">조건문 명제로 설명 준비하기</h1>
+                <p class="text-xs sm:text-sm text-slate-500 mt-1 font-medium" id="prep-subtitle"></p>
+            </div>
+
+            <div id="prep-guide-box" class="max-w-xl mx-auto rounded-lg p-4 mb-5 border text-sm leading-relaxed"></div>
+
+            <div class="max-w-xl mx-auto">
+                <div class="flex items-center justify-between mb-1.5">
+                    <label class="block text-xs font-bold text-slate-600">내가 발표할 명제 초안</label>
+                    <select id="prep-logic-type" class="text-xs p-1.5 border border-slate-300 rounded-lg outline-none focus:border-indigo-600" onchange="handleLogicTypeChange()">
+                        <option value="조건문">조건문 (P이면 Q이다)</option>
+                        <option value="전칭">전칭명제 (모든 ~에 대하여 ~이다, ∀x)</option>
+                        <option value="존재">존재명제 (어떤 ~는 ~이다, ∃x)</option>
+                    </select>
+                </div>
+                <textarea id="prep-draft" rows="3" class="doc-textarea text-sm" placeholder="예: 이것이 과일이면 씨앗을 품고 있다." oninput="savePrepDraft()"></textarea>
+                <p class="text-xs text-slate-400 mt-1.5">* 단어를 직접 말하지 않고, 참(시민) 또는 모순 없이 그럴듯한 거짓(라이어)으로 서술하세요. 위에서 논리 형태를 바꾸면 예시 문구도 함께 바뀝니다.</p>
+            </div>
+
+            <div class="max-w-xl mx-auto flex justify-between mt-6">
+                <button onclick="goToStep(2)" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-xl transition flex items-center space-x-2">
+                    <i class="fa-solid fa-arrow-left"></i><span>역할 다시 보기</span>
+                </button>
+                <button onclick="enterMainWorksheet()" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-md transition flex items-center space-x-2">
+                    <span>모둠 발표 시작, 추론 기록으로</span><i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+        </section>
+
+        <!-- ================= STEP 4: 명제 논리 추론 (메인 활동지) ================= -->
+        <section id="step-main" class="hidden">
+            <div class="a4-paper">
+
+                <div class="text-center border-b-2 border-slate-900 pb-5 mb-6">
+                    <div class="inline-block px-3 py-1 bg-indigo-50 border border-indigo-200 text-indigo-700 rounded-full text-xs font-extrabold uppercase tracking-wider mb-2">STEP 4 · 수학Ⅱ / 명제와 연역적 추론 탐구 활동</div>
+                    <h1 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">수학적 연역 추론 기반 「논리 라이어 게임」 모둠 활동지</h1>
+                    <p class="text-xs sm:text-sm text-slate-500 mt-1 font-medium">[학습 핵심] 참·거짓 조건문 명제($P \rightarrow Q$)와 진술 간 동치/모순을 통한 논리적 라이어 추론</p>
+                </div>
+
+                <!-- 모둠원 현황 (실시간) -->
+                <div class="bg-indigo-50/60 border border-indigo-200 rounded-lg p-3.5 mb-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-bold text-indigo-800"><i class="fa-solid fa-people-group mr-1"></i> 우리 모둠 발언 순서</span>
+                        <button onclick="refreshGroup(true)" class="no-print text-xs text-indigo-600 hover:text-indigo-800 font-medium"><i class="fa-solid fa-rotate mr-1"></i>새로고침</button>
+                    </div>
+                    <div id="member-status-list-main" class="flex flex-wrap gap-1.5 text-xs"></div>
+                </div>
+
+                <!-- STUDENT INFO -->
+                <div class="bg-slate-50 border border-slate-300 rounded-lg p-4 mb-6">
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1">모둠명</label>
+                            <input type="text" id="student-group" class="doc-input w-full font-semibold text-slate-800 px-1 py-0.5" disabled>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1">나의 순번 / 이름</label>
+                            <input type="text" id="student-name" class="doc-input w-full font-semibold text-slate-800 px-1 py-0.5" disabled>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1">나의 역할</label>
+                            <input type="text" id="student-role" class="doc-input w-full font-bold px-1 py-0.5" disabled>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1">수업 일자</label>
+                            <input type="date" id="student-date" class="doc-input w-full text-slate-800 px-1 py-0.5" oninput="saveData()">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECTION 1 -->
+                <div class="mb-7">
+                    <h2 class="text-base sm:text-lg font-extrabold text-slate-900 border-l-4 border-indigo-600 pl-3 mb-3">
+                        <i class="fa-solid fa-bullseye text-indigo-600 mr-2"></i> 1. 활동 목표 및 필수 진행 규칙
+                    </h2>
+                    <div class="bg-indigo-50/70 border border-indigo-100 rounded-lg p-3.5 text-xs sm:text-sm text-slate-700 space-y-2">
+                        <p class="font-medium">
+                            <strong class="text-indigo-900"><i class="fa-solid fa-circle-check text-indigo-600 mr-1"></i> [학습 목표]</strong>
+                            발언자들의 명제 진술을 청취한 후, 명제 간의 <strong>논리적 모순(Contradiction)</strong>을 발견하고 삼단논법 등 연역적 추론에 따라 라이어(거짓말쟁이)를 논리적으로 지목할 수 있다.
+                        </p>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 border-t border-indigo-100/80">
+                            <div class="bg-white p-2.5 rounded border border-indigo-100">
+                                <span class="font-bold text-blue-700"><i class="fa-solid fa-user-shield mr-1"></i> 시민</span>
+                                <p class="text-xs text-slate-600 mt-0.5">제시어를 알고 있음. 단어를 직접 언급하지 않고 <u>"~이면 ~이다" 형태의 조건문 명제</u>로 참만 진술함.</p>
+                            </div>
+                            <div class="bg-white p-2.5 rounded border border-indigo-100">
+                                <span class="font-bold text-rose-700"><i class="fa-solid fa-user-ninja mr-1"></i> 라이어</span>
+                                <p class="text-xs text-slate-600 mt-0.5">제시어를 모름. 시민의 명제들을 듣고 눈치껏 모순이 생기지 않도록 거짓/모호한 명제로 유연하게 위장함.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECTION 1-2: 술어 논리 기초 -->
+                <div class="mb-7">
+                    <h2 class="text-base sm:text-lg font-extrabold text-slate-900 border-l-4 border-indigo-600 pl-3 mb-3">
+                        <i class="fa-solid fa-code-branch text-indigo-600 mr-2"></i> 2. 술어 논리 기초: 전칭명제와 존재명제
+                    </h2>
+                    <div class="bg-slate-50 border border-slate-200 rounded-lg p-3.5 text-xs sm:text-sm text-slate-700 space-y-2.5">
+                        <p><strong class="text-slate-900">명제함수</strong>: 변수 $x$의 값에 따라 참/거짓이 정해지는 문장 $P(x)$ (예: "$x$는 씨앗을 품고 있다").</p>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            <div class="bg-white p-2.5 rounded border border-slate-200">
+                                <span class="font-bold text-indigo-700">전칭명제 (∀x P(x))</span>
+                                <p class="text-xs text-slate-600 mt-0.5">"모든 x에 대하여 P(x)이다." <strong>단 하나의 반례</strong>만 있어도 거짓이 됩니다. 라이어의 전칭 진술은 모순 하나로 바로 무너뜨릴 수 있습니다.</p>
+                            </div>
+                            <div class="bg-white p-2.5 rounded border border-slate-200">
+                                <span class="font-bold text-indigo-700">존재명제 (∃x P(x))</span>
+                                <p class="text-xs text-slate-600 mt-0.5">"어떤 x에 대하여 P(x)이다." 참인 예가 <strong>하나라도 있으면</strong> 참이 됩니다. 반박하려면 모든 경우가 거짓임을 보여야 합니다.</p>
+                            </div>
+                        </div>
+                        <p class="text-xs text-slate-500 pt-1 border-t border-slate-200">부정 관계: <code class="bg-slate-100 px-1 rounded">¬(∀x P(x)) ≡ ∃x ¬P(x)</code>, <code class="bg-slate-100 px-1 rounded">¬(∃x P(x)) ≡ ∀x ¬P(x)</code>. 아래 기록표에서 각 발언의 <strong>논리 형태</strong>를 확인하고, 전칭명제는 반례를, 존재명제는 성립 여부를 집중적으로 따져보세요.</p>
+                    </div>
+                </div>
+
+                <!-- SECTION 3 (was 2 - statement table) -->
+                <div class="mb-7">
+                    <div class="flex items-center justify-between mb-3">
+                        <h2 class="text-base sm:text-lg font-extrabold text-slate-900 border-l-4 border-indigo-600 pl-3">
+                            <i class="fa-solid fa-table-list text-indigo-600 mr-2"></i> 3. 모둠원 명제 진술 및 논리 분석 기록표
+                        </h2>
+                        <div class="no-print flex items-center space-x-2">
+                            <button onclick="refreshSharedStatements()" class="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-md border border-slate-200 transition flex items-center space-x-1">
+                                <i class="fa-solid fa-rotate"></i><span>공유 명제 새로고침</span>
+                            </button>
+                            <button onclick="addStatementRow()" class="px-3 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold rounded-md border border-indigo-200 transition flex items-center space-x-1">
+                                <i class="fa-solid fa-plus"></i><span>수동 행 추가</span>
+                            </button>
+                        </div>
+                    </div>
+                    <p class="text-xs text-slate-500 mb-2">* 모둠원이 <strong>3단계</strong>에서 작성한 명제가 순번 순서대로 자동으로 채워집니다 (파란 표시 = 공유된 명제, 직접 수정 불가). 아직 제출하지 않은 모둠원은 대기중으로 표시되며, 논리 판정과 의심도는 각자 직접 채점합니다.</p>
+                    <div class="overflow-x-auto border border-slate-300 rounded-lg shadow-sm">
+                        <table class="w-full text-left text-xs sm:text-sm border-collapse" id="statement-table">
+                            <thead>
+                                <tr class="bg-slate-800 text-white font-bold text-xs">
+                                    <th class="p-2.5 w-24 text-center border-r border-slate-700">발언자</th>
+                                    <th class="p-2.5 border-r border-slate-700">발표한 명제 진술</th>
+                                    <th class="p-2.5 w-24 text-center border-r border-slate-700">논리 형태</th>
+                                    <th class="p-2.5 w-40 border-r border-slate-700">논리 판정 (동치/모순)</th>
+                                    <th class="p-2.5 w-24 text-center border-r border-slate-700">라이어 의심도</th>
+                                    <th class="p-2.5 w-10 text-center no-print">삭제</th>
+                                </tr>
+                            </thead>
+                            <tbody id="statement-tbody" class="divide-y divide-slate-200 bg-white"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- SECTION 4: 추론 규칙 알아보기 -->
+                <div class="mb-7">
+                    <h2 class="text-base sm:text-lg font-extrabold text-slate-900 border-l-4 border-indigo-600 pl-3 mb-3">
+                        <i class="fa-solid fa-diagram-project text-indigo-600 mr-2"></i> 4. 추론 규칙 알아보기: 귀납적 가설과 연역적 추론
+                    </h2>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs sm:text-sm">
+                        <div class="bg-white p-3 rounded-lg border border-amber-200">
+                            <span class="font-bold text-amber-700"><i class="fa-solid fa-lightbulb mr-1"></i> 귀납적 추론 (가설 세우기)</span>
+                            <p class="text-slate-600 mt-1">여러 개별 사례(참인 진술들)에서 공통 패턴을 찾아 "아마 ~일 것이다"라는 가설을 세우는 방법입니다. 결론이 100% 확실하지는 않으며, 반례 하나로 뒤집힐 수 있습니다.</p>
+                            <p class="text-slate-400 mt-1.5 text-[11px]">예: "씨앗이 있다" + "나무에서 자란다" → "아마도 과일일 것이다"</p>
+                        </div>
+                        <div class="bg-white p-3 rounded-lg border border-indigo-200">
+                            <span class="font-bold text-indigo-700"><i class="fa-solid fa-arrow-right-long mr-1"></i> 긍정논법 (전건 긍정)</span>
+                            <p class="text-slate-600 mt-1">전제1) P이면 Q이다. 전제2) P이다. → 결론) Q이다.</p>
+                            <p class="text-slate-400 mt-1.5 text-[11px]">게임 연결: 조건(P)이 실제로 참이면 결과(Q)도 반드시 참이어야 합니다. 결과가 거짓이면 그 발언은 거짓 — 라이어의 단서!</p>
+                        </div>
+                        <div class="bg-white p-3 rounded-lg border border-emerald-200">
+                            <span class="font-bold text-emerald-700"><i class="fa-solid fa-link mr-1"></i> 삼단논법 (가언 삼단논법)</span>
+                            <p class="text-slate-600 mt-1">전제1) P이면 Q이다. 전제2) Q이면 R이다. → 결론) P이면 R이다.</p>
+                            <p class="text-slate-400 mt-1.5 text-[11px]">게임 연결: 두 사람의 조건문을 연결해 새 결론을 만들고, 그 결론이 다른 발언과 충돌하는지 확인해보세요.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECTION 5 -->
+                <div class="mb-7">
+                    <h2 class="text-base sm:text-lg font-extrabold text-slate-900 border-l-4 border-indigo-600 pl-3 mb-3">
+                        <i class="fa-solid fa-magnifying-glass-chart text-indigo-600 mr-2"></i> 5. 연역적 추론 및 라이어 지목 보고서
+                    </h2>
+                    <div class="space-y-4">
+                        <div class="bg-amber-50 border border-amber-200 rounded-lg p-3.5">
+                            <label class="block font-bold text-slate-800 text-xs sm:text-sm mb-1.5">
+                                Q1. <span class="text-amber-700 underline decoration-amber-400">[귀납적 추론]</span> 시민들의 참인 진술을 종합해 제시어가 무엇일지 가설을 세워보시오.
+                            </label>
+                            <textarea id="hypothesis-note" rows="2" class="doc-textarea text-xs sm:text-sm" placeholder="예: 씨앗이 있고 나무에서 자란다는 진술을 종합하면, 제시어는 아마도 과일일 것이다." oninput="saveData()"></textarea>
+                        </div>
+                        <div class="bg-slate-50 border border-slate-200 rounded-lg p-3.5">
+                            <label class="block font-bold text-slate-800 text-xs sm:text-sm mb-1.5">
+                                Q2. 모둠원들의 명제 진술 중 결정적인 <span class="text-rose-600 underline decoration-rose-400">논리적 모순(Contradiction)</span>을 찾아 서술하시오.
+                            </label>
+                            <textarea id="proof-q1" rows="3" class="doc-textarea text-xs sm:text-sm" placeholder="예: [모둠원 1]은 '이것은 나무에서 자란다'고 진술하였으나, [모둠원 3]은 '이것은 땅속에서 자란다'고 진술함. 두 조건 명제는 동시에 참일 수 없으므로 명백한 모순관계임." oninput="saveData()"></textarea>
+                        </div>
+                        <div class="bg-slate-50 border border-slate-200 rounded-lg p-3.5">
+                            <label class="block font-bold text-slate-800 text-xs sm:text-sm mb-1.5">
+                                Q3. 아래에서 적용한 추론 규칙을 선택하고, 그 규칙에 근거하여 최종 지목할 라이어와 타당한 논리적 근거를 제시하시오.
+                            </label>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-2">
+                                <div class="sm:col-span-1">
+                                    <span class="text-xs font-semibold text-slate-500">최종 지목 라이어</span>
+                                    <input type="text" id="suspect-target" class="doc-input w-full font-bold text-rose-700 text-sm" placeholder="예: 모둠원 3 (김철수)" oninput="saveData()">
+                                </div>
+                                <div class="sm:col-span-2">
+                                    <span class="text-xs font-semibold text-slate-500">적용한 추론 규칙</span>
+                                    <select id="suspect-reason-type" class="doc-input w-full font-semibold text-slate-800 text-sm" onchange="handleReasoningTypeChange()">
+                                        <option value="긍정논법">긍정논법 (전건 긍정)</option>
+                                        <option value="삼단논법">삼단논법 (가언 삼단논법)</option>
+                                        <option value="귀납적추론">귀납적 추론 (가설)</option>
+                                        <option value="기타">기타</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <textarea id="proof-q2" rows="3" class="doc-textarea text-xs sm:text-sm" placeholder="연역적 근거: 모둠원 1, 2, 4의 명제는 제시어의 참인 성질과 일치하는 반면, 모둠원 3의 명제만 유일하게 기존 전제들과 결합 시 모순을 일으키므로 필연적으로 모둠원 3이 라이어임." oninput="saveData()"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="no-print flex justify-between mt-4">
+                    <button onclick="goToStep(3)" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold rounded-lg transition flex items-center space-x-1.5">
+                        <i class="fa-solid fa-arrow-left"></i><span>설명 준비 화면으로</span>
+                    </button>
+                    <button onclick="goToStep(5)" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg transition flex items-center space-x-1.5">
+                        <span>라이어 투표하러 가기</span><i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ================= STEP 5: 라이어 투표 ================= -->
+        <section id="step-vote" class="a4-paper hidden">
+            <div class="text-center border-b-2 border-slate-900 pb-5 mb-6">
+                <div class="inline-block px-3 py-1 bg-indigo-50 border border-indigo-200 text-indigo-700 rounded-full text-xs font-extrabold uppercase tracking-wider mb-2">STEP 5</div>
+                <h1 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">누가 라이어일까? 모둠 투표</h1>
+                <p class="text-xs sm:text-sm text-slate-500 mt-1 font-medium">기록표의 논리 판정을 바탕으로 라이어라고 생각하는 모둠원에게 투표하세요.</p>
+            </div>
+
+            <div class="max-w-md mx-auto">
+                <label class="block text-xs font-bold text-slate-600 mb-2">내가 지목하는 라이어</label>
+                <div id="vote-options" class="space-y-2 mb-4"></div>
+                <button onclick="submitVote()" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-md transition flex items-center justify-center space-x-2">
+                    <i class="fa-solid fa-check-to-slot"></i><span>투표 제출</span>
+                </button>
+                <p id="vote-status" class="hidden text-xs text-emerald-600 font-semibold text-center mt-2"><i class="fa-solid fa-circle-check mr-1"></i>투표가 제출되었습니다.</p>
+            </div>
+
+            <div id="vote-tally-box" class="hidden max-w-md mx-auto bg-slate-50 border border-slate-200 rounded-lg p-3.5 mt-6">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs font-bold text-slate-600"><i class="fa-solid fa-chart-simple mr-1"></i> 모둠 투표 현황</span>
+                    <button onclick="refreshVotes()" class="no-print text-xs text-indigo-600 hover:text-indigo-800 font-medium"><i class="fa-solid fa-rotate mr-1"></i>새로고침</button>
+                </div>
+                <div id="vote-tally-list" class="space-y-1.5 text-xs"></div>
+            </div>
+
+            <div id="reveal-answer-box" class="hidden max-w-md mx-auto mt-6"></div>
+
+            <div class="max-w-md mx-auto flex flex-col items-center mt-6" id="reveal-answer-trigger">
+                <button id="btn-reveal-answer" onclick="revealAnswer()" disabled class="px-6 py-2.5 bg-slate-300 text-white font-bold rounded-xl shadow-md transition flex items-center space-x-2 cursor-not-allowed">
+                    <i class="fa-solid fa-user-secret"></i><span id="btn-reveal-answer-text">정답 공개 (모둠원 전원 투표 후 이용 가능)</span>
+                </button>
+            </div>
+
+            <div class="max-w-md mx-auto border-t-2 border-dashed border-slate-200 mt-8 pt-6 flex flex-col items-center">
+                <p class="text-xs text-slate-500 mb-2 text-center">게임이 끝났나요? 같은 모둠원 그대로 역할과 제시어를 새로 뽑아 다시 시작할 수 있습니다.</p>
+                <button onclick="startNewGameSameGroup()" class="px-5 py-2.5 bg-white hover:bg-slate-50 text-indigo-700 font-bold rounded-xl border-2 border-indigo-200 transition flex items-center space-x-2">
+                    <i class="fa-solid fa-arrows-rotate"></i><span>지금 모둠원 그대로 새 게임 시작</span>
+                </button>
+                <p class="text-[11px] text-slate-400 mt-1.5">누구든 누르면 모둠 전체가 함께 새 라운드로 이동합니다.</p>
+            </div>
+
+            <div class="max-w-md mx-auto flex justify-start mt-6">
+                <button onclick="goToStep(4)" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold rounded-lg transition flex items-center space-x-1.5">
+                    <i class="fa-solid fa-arrow-left"></i><span>추론 기록표로</span>
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ================= FIREBASE ================= -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+    <script>
+        // 선생님이 발급받은 Firebase 프로젝트 설정값
+        const firebaseConfig = {
+            apiKey: "AIzaSyBRxKppdfAuUrA8kDE7aOcOBNIMDBIO2Ic",
+            authDomain: "logic-liar-game-db.firebaseapp.com",
+            databaseURL: "https://logic-liar-game-db-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "logic-liar-game-db",
+            storageBucket: "logic-liar-game-db.firebasestorage.app",
+            messagingSenderId: "387381721184",
+            appId: "1:387381721184:web:f8958e847f4c042ae92b05",
+            measurementId: "G-LP0CTJRN0K"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        const WORD_DATABASE = {
+            math: ['삼각비', '미분계수', '이차함수', '벡터', '명제', '행렬', '피타고라스'],
+            fruit: ['사과', '수박', '바나나', '딸기', '복숭아', '포도'],
+            animal: ['호랑이', '독수리', '돌고래', '사자', '펭귄']
+        };
+
+        let mySession = null;   // { groupKey, groupName, turn, name }
+        let groupData = null;   // { groupName, totalPlayers, category, liarTurn, word, members: {turn: name} }
+        let isLiarMe = false;
+        let groupListenerRef = null;      // groups/{key} 실시간 구독
+        let statementsListenerRef = null; // groups/{key}/statements 실시간 구독 (4단계 기록표)
+        let votesListenerRef = null;      // groups/{key}/votes 실시간 구독 (5단계 투표)
+
+        let savedJudgments = {};    // { turn: {status, rating} } - 내가 저장해둔 논리 판정/의심도
+        let savedManualRows = [];   // 내가 수동으로 추가한 행 목록
+        let firstStatementRender = true;
+
+        window.addEventListener('DOMContentLoaded', init);
+        window.addEventListener('beforeunload', () => {
+            [groupListenerRef, statementsListenerRef, votesListenerRef].forEach(r => { if (r) r.off('value'); });
+        });
+
+        // Realtime Database 경로에 못 쓰는 문자(. # $ [ ] /)를 안전하게 치환
+        function safeKey(s) {
+            return String(s).trim().replace(/[.#$\[\]\/]/g, '_');
+        }
+        function escapeHtml(str) {
+            return String(str == null ? '' : str).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        }
+
+        function init() {
+            const saved = localStorage.getItem('liargame_mysession');
+            if (saved) {
+                try {
+                    mySession = JSON.parse(saved);
+                    showSessionBadge();
+                    subscribeToGroup(mySession.groupKey, () => {
+                        if (groupData && groupData.members && groupData.members[mySession.turn]) {
+                            goToStep(2, true);
+                        } else {
+                            // 저장된 모둠/순번이 더 이상 유효하지 않으면 처음부터
+                            localStorage.removeItem('liargame_mysession');
+                            mySession = null;
+                            goToStep(1, true);
+                        }
+                    });
+                    return;
+                } catch (e) { /* fall through */ }
+            }
+            goToStep(1, true);
+        }
+
+        // ---------- 실시간 구독 ----------
+        let currentRound = null; // 라운드 번호 추적 (새 게임 시작 감지용)
+        function subscribeToGroup(groupKey, onFirstLoad) {
+            if (groupListenerRef) groupListenerRef.off('value');
+            groupListenerRef = db.ref('groups/' + groupKey);
+            let first = true;
+            currentRound = null;
+            groupListenerRef.on('value', (snap) => {
+                groupData = snap.exists() ? snap.val() : null;
+                if (groupData && !groupData.members) groupData.members = {};
+
+                if (groupData) {
+                    const newRound = groupData.round || 1;
+                    if (currentRound !== null && newRound !== currentRound && mySession) {
+                        handleNewRoundStarted();
+                    }
+                    currentRound = newRound;
+                }
+
+                renderMemberList('member-status-list');
+                renderMemberList('member-status-list-main');
+                if (document.getElementById('step-reveal') && !document.getElementById('step-reveal').classList.contains('hidden')) {
+                    renderRevealBox();
+                }
+                if (first) { first = false; if (onFirstLoad) onFirstLoad(); }
+            }, (err) => {
+                flashStatus('연결 오류: 규칙/네트워크를 확인해주세요');
+            });
+        }
+
+        // ---------- STEP NAV ----------
+        function goToStep(n, silent) {
+            ['step-join', 'step-reveal', 'step-prep', 'step-main', 'step-vote'].forEach((id, idx) => {
+                document.getElementById(id).classList.toggle('hidden', idx !== (n - 1));
+            });
+            for (let i = 1; i <= 5; i++) {
+                const badge = document.getElementById('badge-' + i);
+                badge.classList.remove('active', 'done', 'pending');
+                badge.classList.add(i < n ? 'done' : (i === n ? 'active' : 'pending'));
+                badge.innerHTML = i < n ? '<i class="fa-solid fa-check"></i>' : i;
+                if (i < 5) document.getElementById('line-' + i).classList.toggle('done', i < n);
+            }
+            document.getElementById('btn-leave').classList.toggle('hidden', n === 1);
+            document.getElementById('btn-leave').classList.toggle('flex', n !== 1);
+            if (n === 2) renderRevealBox();
+            if (n === 3) { goToStep3Setup(); loadPrepDraft(); }
+            if (n === 4) { renderMemberList('member-status-list-main'); subscribeToStatements(); }
+            if (n === 5) setupVoteStep();
+            window.scrollTo({ top: 0, behavior: silent ? 'auto' : 'smooth' });
+        }
+
+        function showSessionBadge() {
+            const badge = document.getElementById('session-badge');
+            badge.classList.remove('hidden');
+            badge.classList.add('flex');
+            document.getElementById('session-badge-text').innerText = `${mySession.groupName} · ${mySession.turn}번 ${mySession.name}`;
+        }
+
+        function flashStatus(msg) {
+            const el = document.getElementById('save-status');
+            el.innerHTML = `<i class="fa-solid fa-cloud-arrow-up mr-1.5"></i> ${msg} (${new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })})`;
+        }
+
+        // ---------- STEP 1: JOIN ----------
+        function joinGroup() {
+            const errEl = document.getElementById('join-error');
+            errEl.classList.add('hidden');
+
+            const groupNameRaw = document.getElementById('join-group').value.trim();
+            const turn = parseInt(document.getElementById('join-turn').value, 10);
+            const name = document.getElementById('join-name').value.trim();
+
+            if (!groupNameRaw || !turn || !name) {
+                errEl.innerText = '모둠명, 순번, 이름을 모두 입력해주세요.';
+                errEl.classList.remove('hidden');
+                return;
+            }
+
+            const groupKey = safeKey(groupNameRaw);
+            const total = parseInt(document.getElementById('join-total').value, 10) || 4;
+            const category = document.getElementById('join-category').value;
+
+            let abortedReason = null;
+
+            db.ref('groups/' + groupKey).transaction((current) => {
+                if (current === null) {
+                    // 새 모둠 생성 (가장 먼저 입장한 사람의 설정을 사용)
+                    if (turn > total) { abortedReason = `순번은 총 인원(${total}명) 이내여야 합니다.`; return; }
+                    const words = WORD_DATABASE[category] || WORD_DATABASE.math;
+                    const word = words[Math.floor(Math.random() * words.length)];
+                    const liarTurn = Math.floor(Math.random() * total) + 1;
+                    const members = {};
+                    members[turn] = name;
+                    return { groupName: groupNameRaw, totalPlayers: total, category, liarTurn, word, round: 1, createdAt: Date.now(), members };
+                } else {
+                    if (turn > current.totalPlayers) { abortedReason = `이 모둠의 총 인원은 ${current.totalPlayers}명입니다. 순번을 확인해주세요.`; return; }
+                    if (!current.members) current.members = {};
+                    current.members[turn] = name;
+                    return current;
+                }
+            }).then((result) => {
+                if (!result.committed) {
+                    errEl.innerText = abortedReason || '입장에 실패했습니다. 잠시 후 다시 시도해주세요.';
+                    errEl.classList.remove('hidden');
+                    return;
+                }
+                mySession = { groupKey, groupName: groupNameRaw, turn, name };
+                localStorage.setItem('liargame_mysession', JSON.stringify(mySession));
+                showSessionBadge();
+                flashStatus('모둠에 입장했습니다');
+                subscribeToGroup(groupKey, () => goToStep(2));
+            }).catch((e) => {
+                errEl.innerText = '연결에 실패했습니다. 네트워크 또는 Firebase 규칙을 확인해주세요.';
+                errEl.classList.remove('hidden');
+            });
+        }
+
+        function leaveGroup() {
+            if (!confirm('현재 모둠에서 나가고 다른 모둠으로 새로 입장하시겠습니까?')) return;
+            if (groupListenerRef) { groupListenerRef.off('value'); groupListenerRef = null; }
+            localStorage.removeItem('liargame_mysession');
+            mySession = null; groupData = null;
+            document.getElementById('session-badge').classList.add('hidden');
+            document.getElementById('join-group').value = '';
+            document.getElementById('join-turn').value = '';
+            document.getElementById('join-name').value = '';
+            goToStep(1);
+        }
+
+        // 같은 모둠원 그대로 역할/제시어를 새로 뽑아 새 라운드를 시작합니다.
+        // 모둠 데이터가 공유되므로, 한 명이 누르면 접속해 있는 모둠원 전원의 화면이 함께 초기화됩니다.
+        function startNewGameSameGroup() {
+            if (!mySession || !groupData) return;
+            if (!confirm('현재 모둠원 그대로 새 게임을 시작할까요? 지금까지의 명제/투표 기록이 모두 초기화됩니다.')) return;
+
+            const total = groupData.totalPlayers;
+            const category = groupData.category;
+            const words = WORD_DATABASE[category] || WORD_DATABASE.math;
+            const word = words[Math.floor(Math.random() * words.length)];
+            const liarTurn = Math.floor(Math.random() * total) + 1;
+            const nextRound = (groupData.round || 1) + 1;
+
+            const updates = {};
+            const base = 'groups/' + mySession.groupKey + '/';
+            updates[base + 'word'] = word;
+            updates[base + 'liarTurn'] = liarTurn;
+            updates[base + 'round'] = nextRound;
+            updates[base + 'statements'] = null;
+            updates[base + 'votes'] = null;
+            updates[base + 'worksheets'] = null;
+
+            db.ref().update(updates)
+                .then(() => flashStatus('새 게임이 시작되었습니다'))
+                .catch(() => flashStatus('새 게임 시작 실패 - 네트워크를 확인해주세요'));
+        }
+
+        // groups/{key}/round 값이 바뀐 것을 감지했을 때 (다른 모둠원이 "새 게임 시작"을 눌렀을 때)
+        // 이 학생의 화면도 함께 초기화하고 2단계(역할 확인)로 이동시킵니다.
+        function handleNewRoundStarted() {
+            if (!mySession) return;
+            localStorage.removeItem(draftKey());
+            localStorage.removeItem('liargame_worksheet_' + mySession.groupKey + '_' + mySession.turn);
+            savedJudgments = {};
+            savedManualRows = [];
+            firstStatementRender = true;
+
+            const draftEl = document.getElementById('prep-draft');
+            if (draftEl) draftEl.value = '';
+            const tbody = document.getElementById('statement-tbody');
+            if (tbody) tbody.innerHTML = '';
+            ['hypothesis-note', 'proof-q1', 'proof-q2', 'suspect-target'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.value = '';
+            });
+            const reasonSel = document.getElementById('suspect-reason-type');
+            if (reasonSel) { reasonSel.value = '긍정논법'; updateReasoningPlaceholder(); }
+
+            flashStatus('새 게임이 시작되었습니다 - 역할을 다시 확인하세요');
+            goToStep(2);
+        }
+
+        // ---------- STEP 2: REVEAL ----------
+        function refreshGroup(forMain) {
+            if (!mySession) return;
+            db.ref('groups/' + mySession.groupKey).once('value').then(snap => {
+                groupData = snap.exists() ? snap.val() : null;
+                if (groupData && !groupData.members) groupData.members = {};
+                if (forMain) renderMemberList('member-status-list-main'); else renderRevealBox();
+                flashStatus('모둠 현황을 새로고침했습니다');
+            });
+        }
+
+        function renderRevealBox() {
+            if (!groupData || !mySession) return;
+            isLiarMe = (mySession.turn === groupData.liarTurn);
+            const box = document.getElementById('reveal-result-box');
+
+            if (isLiarMe) {
+                box.className = 'max-w-md mx-auto rounded-xl p-6 text-center mb-5 border-2 min-h-[140px] flex flex-col items-center justify-center bg-rose-50 border-rose-300';
+                box.innerHTML = `
+                    <span class="px-3 py-1 bg-rose-600 text-white font-extrabold text-xs rounded-full uppercase">${mySession.turn}번 ${mySession.name}님</span>
+                    <h4 class="text-xl font-black text-rose-700 mt-2"><i class="fa-solid fa-user-ninja mr-1"></i> 당신은 [라이어] 입니다!</h4>
+                    <p class="text-xs text-rose-600 mt-1">제시어가 제공되지 않습니다. 다른 시민들의 조건문 명제를 들은 후, 모순이 생기지 않도록 그럴듯하게 위장하세요.</p>`;
+            } else {
+                box.className = 'max-w-md mx-auto rounded-xl p-6 text-center mb-5 border-2 min-h-[140px] flex flex-col items-center justify-center bg-emerald-50 border-emerald-300';
+                box.innerHTML = `
+                    <span class="px-3 py-1 bg-emerald-600 text-white font-extrabold text-xs rounded-full uppercase">${mySession.turn}번 ${mySession.name}님</span>
+                    <h4 class="text-xl font-black text-emerald-800 mt-2"><i class="fa-solid fa-user-shield mr-1"></i> 당신은 [시민] 입니다!</h4>
+                    <p class="text-xs text-emerald-600 mt-1">비밀 제시어:
+                        <strong id="reveal-word" class="text-base text-slate-900 border-b-2 border-emerald-500 pb-0.5 px-1">●●●●</strong>
+                        <button onclick="toggleRevealWord()" class="no-print ml-2 text-xs text-emerald-700 underline"><i class="fa-solid fa-eye mr-0.5"></i>보기</button>
+                    </p>`;
+            }
+            renderMemberList('member-status-list');
+        }
+
+        function toggleRevealWord() {
+            const el = document.getElementById('reveal-word');
+            if (!el) return;
+            el.innerText = el.innerText === '●●●●' ? groupData.word : '●●●●';
+        }
+
+        function renderMemberList(containerId) {
+            const el = document.getElementById(containerId);
+            if (!el || !groupData) return;
+            const members = groupData.members || {};
+            const joined = Object.keys(members).length;
+            let html = `<span class="px-2 py-1 bg-slate-800 text-white rounded-full font-bold">${joined} / ${groupData.totalPlayers}명 입장</span>`;
+            for (let t = 1; t <= groupData.totalPlayers; t++) {
+                const name = members[t];
+                const isMe = mySession && mySession.turn === t;
+                if (name) {
+                    html += `<span class="px-2 py-1 rounded-full border ${isMe ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-slate-700 border-slate-300'} font-medium">${t}번 ${name}${isMe ? ' (나)' : ''}</span>`;
+                } else {
+                    html += `<span class="px-2 py-1 rounded-full border border-dashed border-slate-300 text-slate-400">${t}번 대기중</span>`;
+                }
+            }
+            el.innerHTML = html;
+        }
+
+        // ---------- STEP 3: PREP ----------
+        function goToStep3Setup() {
+            if (!groupData || !mySession) return;
+            const subtitle = document.getElementById('prep-subtitle');
+            const guide = document.getElementById('prep-guide-box');
+            if (isLiarMe) {
+                subtitle.innerText = '제시어를 모르는 라이어입니다. 다른 사람 발언을 참고해 그럴듯한 조건문을 준비하세요.';
+                guide.className = 'max-w-xl mx-auto rounded-lg p-4 mb-5 border text-sm leading-relaxed bg-rose-50 border-rose-200 text-rose-900';
+                guide.innerHTML = `<strong>라이어 설명 가이드</strong><ul class="list-disc pl-5 mt-1.5 space-y-1 text-xs sm:text-sm">
+                    <li>제시어를 알아채지 못하게, 앞서 발표된 명제의 패턴(형태)을 따라 하세요.</li>
+                    <li>너무 구체적으로 말하면 바로 모순이 드러나니, 여러 단어에 두루 해당할 만한 조건문을 고르세요.</li>
+                    <li>"~이면 ~이다" 형태를 반드시 지키고, 시민처럼 자신 있게 발표하세요.</li></ul>`;
+            } else {
+                subtitle.innerText = `제시어 "${groupData.word}"를 직접 말하지 않고, 그 성질을 조건문으로 표현하세요.`;
+                guide.className = 'max-w-xl mx-auto rounded-lg p-4 mb-5 border text-sm leading-relaxed bg-emerald-50 border-emerald-200 text-emerald-900';
+                guide.innerHTML = `<strong>시민 설명 가이드</strong><ul class="list-disc pl-5 mt-1.5 space-y-1 text-xs sm:text-sm">
+                    <li>제시어의 참인 성질 하나를 골라 "P이면 Q이다" 형태의 조건문 명제로 바꿔보세요.</li>
+                    <li>단어 자체나 너무 결정적인 단서는 직접 언급하지 마세요.</li>
+                    <li>다른 시민의 발언과 서로 모순되지 않도록 유의하세요.</li>
+                    <li>입력창의 예시 문구는 제시어의 실제 성질을 참고해 보여드리는 것입니다. 그대로 베끼지 말고 자신만의 표현으로 바꿔보세요.</li></ul>`;
+            }
+        }
+
+        const PREP_EXAMPLES = {
+            '조건문': '예: 이것이 과일이면 씨앗을 품고 있다.',
+            '전칭': '예: 모든 ~는 반드시 그런 성질을 가진다. (예: 모든 포유류는 체온을 스스로 조절한다.)',
+            '존재': '예: 어떤 ~는 그런 경우가 있다. (예: 어떤 식물은 물 없이도 오래 산다.)'
+        };
+
+        // 제시어별 참인 성질 예시 (시민에게만 노출됩니다. 라이어는 제시어를 모르므로 일반 예시를 봅니다)
+        const PREP_WORD_EXAMPLES = {
+            '삼각비':   { '조건문': '이것이 직각삼각형의 변의 비이면 각도에 따라 값이 정해진다.', '전칭': '모든 예각에 대하여 이 값은 0과 1 사이에 있다.', '존재': '어떤 각에서는 이 값이 정확히 1이 된다.' },
+            '미분계수': { '조건문': '이것이 존재하면 그 점에서 접선의 기울기를 나타낸다.', '전칭': '모든 다항함수는 이것을 가진다.', '존재': '어떤 점에서는 이것이 0이 된다.' },
+            '이차함수': { '조건문': '이것의 그래프가 위로 볼록하면 최댓값을 가진다.', '전칭': '모든 이것의 그래프는 매끄러운 곡선을 그린다.', '존재': '어떤 경우에는 그래프가 x축과 만나지 않는다.' },
+            '벡터':     { '조건문': '이것이 영벡터가 아니면 크기와 방향을 모두 가진다.', '전칭': '모든 이것은 크기와 방향으로 나타낼 수 있다.', '존재': '어떤 것은 크기가 1인 단위벡터이다.' },
+            '명제':     { '조건문': '이것이 참이면 그 부정은 거짓이다.', '전칭': '모든 이것은 참 또는 거짓 중 하나로 판별된다.', '존재': '어떤 것은 다른 명제와 결합해 새로운 이것을 만든다.' },
+            '행렬':     { '조건문': '이것이 정사각행렬이면 행과 열의 수가 같다.', '전칭': '모든 이것은 숫자를 가로세로로 배열한 표 형태이다.', '존재': '어떤 것은 곱셈의 역원(역행렬)을 가진다.' },
+            '피타고라스': { '조건문': '이것이 직각삼각형이면 두 변의 제곱의 합이 빗변의 제곱과 같다.', '전칭': '모든 직각삼각형은 이 정리를 만족한다.', '존재': '어떤 세 자연수 쌍은 이 정리를 만족한다.' },
+            '사과':   { '조건문': '이것이 익으면 껍질이 빨갛게 변하는 경우가 많다.', '전칭': '모든 이것은 속에 씨앗을 품고 있다.', '존재': '어떤 것은 껍질째 먹을 수 있다.' },
+            '수박':   { '조건문': '이것이 잘 익으면 두드렸을 때 통통한 소리가 난다.', '전칭': '모든 이것은 겉에 줄무늬가 있다.', '존재': '어떤 것은 씨가 없는 품종이다.' },
+            '바나나': { '조건문': '이것이 익으면 껍질이 노랗게 변한다.', '전칭': '모든 이것은 길쭉하고 휘어진 모양이다.', '존재': '어떤 것은 껍질이 초록색인 채로 팔린다.' },
+            '딸기':   { '조건문': '이것이 잘 익으면 표면이 붉게 변한다.', '전칭': '모든 이것은 씨가 과육 겉면에 있다.', '존재': '어떤 것은 흰색 품종도 있다.' },
+            '복숭아': { '조건문': '이것이 익으면 껍질에 부드러운 털이 있다.', '전칭': '모든 이것은 가운데에 딱딱한 씨가 하나 있다.', '존재': '어떤 것은 껍질이 매끈한 천도 품종이다.' },
+            '포도':   { '조건문': '이것이 송이째 자라면 알갱이가 여러 개 뭉쳐 있다.', '전칭': '모든 이것은 덩굴식물의 열매이다.', '존재': '어떤 것은 씨가 없는 품종이다.' },
+            '호랑이': { '조건문': '이것이 성체이면 몸에 줄무늬가 있다.', '전칭': '모든 이것은 육식을 하는 고양잇과 동물이다.', '존재': '어떤 개체는 흰색 털을 가진다.' },
+            '독수리': { '조건문': '이것이 하늘을 날면 날개를 넓게 펼친다.', '전칭': '모든 이것은 날카로운 발톱과 부리를 가진다.', '존재': '어떤 것은 날개폭이 사람 팔 길이만큼 크다.' },
+            '돌고래': { '조건문': '이것이 숨을 쉬려면 물 위로 올라와야 한다.', '전칭': '모든 이것은 폐로 호흡하는 포유류이다.', '존재': '어떤 것은 초음파로 소리를 내어 대화하듯 소통한다.' },
+            '사자':   { '조건문': '이것이 수컷이면 갈기가 있다.', '전칭': '모든 이것은 무리를 지어 생활한다.', '존재': '어떤 개체는 몸 색이 유난히 짙다.' },
+            '펭귄':   { '조건문': '이것이 걸으면 뒤뚱거리며 움직인다.', '전칭': '모든 이것은 날지 못하는 새이다.', '존재': '어떤 것은 몸집이 사람만큼 크다.' }
+        };
+
+        function updatePrepPlaceholder() {
+            const type = document.getElementById('prep-logic-type').value;
+            let text = PREP_EXAMPLES[type] || PREP_EXAMPLES['조건문'];
+            if (!isLiarMe && groupData && groupData.word) {
+                const wordEx = PREP_WORD_EXAMPLES[groupData.word];
+                if (wordEx && wordEx[type]) text = '예: ' + wordEx[type];
+            }
+            document.getElementById('prep-draft').placeholder = text;
+        }
+
+        function handleLogicTypeChange() {
+            updatePrepPlaceholder();
+            savePrepDraft();
+        }
+
+        function draftKey() {
+            return 'liargame_draft_' + mySession.groupKey + '_' + mySession.turn;
+        }
+
+        // 명제 초안은 이 기기(로컬)에만 저장됩니다. 모둠원에게는 4단계로 넘어갈 때 한 번에 공유됩니다.
+        function savePrepDraft() {
+            if (!mySession) return;
+            const text = document.getElementById('prep-draft').value;
+            const logicType = document.getElementById('prep-logic-type').value;
+            localStorage.setItem(draftKey(), JSON.stringify({ text, logicType }));
+        }
+
+        function loadPrepDraft() {
+            if (!mySession) return;
+            const raw = localStorage.getItem(draftKey());
+            if (raw) {
+                try {
+                    const d = JSON.parse(raw);
+                    document.getElementById('prep-draft').value = d.text || '';
+                    document.getElementById('prep-logic-type').value = d.logicType || '조건문';
+                } catch (e) { /* ignore */ }
+            }
+            updatePrepPlaceholder();
+        }
+
+        // ---------- STEP 4: MAIN WORKSHEET ----------
+        function enterMainWorksheet() {
+            document.getElementById('student-group').value = mySession.groupName;
+            document.getElementById('student-name').value = `${mySession.turn}번 · ${mySession.name}`;
+            const roleInput = document.getElementById('student-role');
+            roleInput.value = isLiarMe ? '라이어 (Liar)' : `시민 (제시어: ${groupData.word})`;
+            roleInput.className = 'doc-input w-full font-bold px-1 py-0.5 ' + (isLiarMe ? 'text-rose-700' : 'text-emerald-700');
+
+            // 3단계에서 준비한 명제를 이 시점에 한 번만 모둠에 공유합니다 (실시간 노출 없음).
+            const text = document.getElementById('prep-draft').value;
+            const logicType = document.getElementById('prep-logic-type').value;
+            db.ref('groups/' + mySession.groupKey + '/statements/' + mySession.turn).set({
+                speaker: `${mySession.turn}번 ${mySession.name}`,
+                turn: mySession.turn,
+                text, logicType,
+                updatedAt: Date.now()
+            }).catch(() => flashStatus('공유 저장 실패 - 네트워크를 확인해주세요'));
+
+            firstStatementRender = true;
+            loadWorksheetMeta(() => {
+                goToStep(4);
+            });
+        }
+
+        // turn !== null 인 행은 3단계에서 공유된 명제로 채워지는 "공유 행" (발언자/명제 잠금)
+        // turn === null 인 행은 사용자가 수동으로 추가한 "직접 입력 행"
+        function addStatementRow(data = null, turn = null, locked = false) {
+            const tbody = document.getElementById('statement-tbody');
+            const rowCount = tbody.children.length + 1;
+            const rowData = data || { speaker: `모둠원 ${rowCount}`, text: '', logicType: '-', status: '참 (True)', rating: 1 };
+
+            const tr = document.createElement('tr');
+            tr.className = 'hover:bg-slate-50 transition' + (locked ? ' bg-indigo-50/30' : '');
+            if (turn !== null) tr.setAttribute('data-turn', turn);
+            const lockedAttr = locked ? 'disabled' : '';
+            const helperText = locked
+                ? '<span class="text-[10px] text-indigo-500 font-semibold"><i class="fa-solid fa-link mr-0.5"></i>3단계에서 공유됨</span>'
+                : (turn !== null ? '<span class="text-[10px] text-amber-500 font-semibold">아직 미제출 - 발표 내용을 직접 입력하세요</span>' : '');
+            const deleteCell = turn !== null
+                ? '<span class="text-slate-300"><i class="fa-solid fa-lock"></i></span>'
+                : '<button onclick="removeRow(this)" class="text-slate-400 hover:text-rose-600 transition"><i class="fa-solid fa-minus-circle"></i></button>';
+
+            tr.innerHTML = `
+                <td class="p-2 border-r border-slate-200">
+                    <input type="text" class="speaker-input doc-input w-full font-bold text-center text-xs text-slate-800" value="${escapeHtml(rowData.speaker)}" ${lockedAttr} oninput="saveData()">
+                </td>
+                <td class="p-2 border-r border-slate-200">
+                    <textarea rows="1" class="statement-text doc-textarea text-xs border-slate-200" placeholder="명제 진술 입력..." ${lockedAttr} oninput="saveData()">${escapeHtml(rowData.text)}</textarea>
+                    ${helperText}
+                </td>
+                <td class="p-2 text-center border-r border-slate-200 text-xs font-semibold text-slate-500 logic-type-cell">${escapeHtml(rowData.logicType || '-')}</td>
+                <td class="p-2 border-r border-slate-200">
+                    <select class="status-select w-full text-xs p-1 border border-slate-200 rounded outline-none bg-white font-medium" onchange="saveData()">
+                        <option value="참 (True)" ${rowData.status === '참 (True)' ? 'selected' : ''}>참 (True)</option>
+                        <option value="거짓 (False)" ${rowData.status === '거짓 (False)' ? 'selected' : ''}>거짓 (False)</option>
+                        <option value="모순 (Contradiction)" ${rowData.status === '모순 (Contradiction)' ? 'selected' : ''}>★ 모순 (Contradiction)</option>
+                        <option value="동치 (Equivalent)" ${rowData.status === '동치 (Equivalent)' ? 'selected' : ''}>동치 (Equivalent)</option>
+                    </select>
+                </td>
+                <td class="p-2 text-center border-r border-slate-200">
+                    <div class="star-rating inline-flex text-amber-400 text-xs space-x-0.5" data-rating="${rowData.rating}">
+                        ${[1,2,3,4,5].map(star => `<i class="fa-${star <= rowData.rating ? 'solid' : 'regular'} fa-star" onclick="setRowRating(this, ${star})"></i>`).join('')}
+                    </div>
+                </td>
+                <td class="p-2 text-center no-print">${deleteCell}</td>`;
+            tbody.appendChild(tr);
+        }
+
+        function setRowRating(starEl, rating) {
+            const container = starEl.parentElement;
+            container.setAttribute('data-rating', rating);
+            container.querySelectorAll('i').forEach((s, idx) => { s.className = idx < rating ? 'fa-solid fa-star' : 'fa-regular fa-star'; });
+            saveData();
+        }
+
+        function removeRow(btn) { btn.closest('tr').remove(); saveData(); }
+
+        // 3단계 공유 명제(statements)를 실시간 구독해서 기록표를 자동으로 채웁니다.
+        // 이미 입력해둔 논리 판정/의심도는 그대로 유지하고, 명제 내용만 갱신합니다.
+        function subscribeToStatements() {
+            if (!mySession) return;
+            if (statementsListenerRef) statementsListenerRef.off('value');
+            statementsListenerRef = db.ref('groups/' + mySession.groupKey + '/statements');
+            statementsListenerRef.on('value', (snap) => renderStatementTable(snap.exists() ? snap.val() : {}));
+        }
+
+        function renderStatementTable(sharedData) {
+            if (!groupData || !mySession) return;
+            const tbody = document.getElementById('statement-tbody');
+
+            // 기존 공유 행의 판정/의심도를 보존하고, 수동 행은 따로 떼어둡니다.
+            const preservedJudgments = {};
+            const manualRowEls = [];
+            Array.from(tbody.children).forEach(tr => {
+                const turnAttr = tr.getAttribute('data-turn');
+                if (turnAttr) {
+                    preservedJudgments[turnAttr] = {
+                        status: tr.querySelector('.status-select').value,
+                        rating: tr.querySelector('.star-rating').getAttribute('data-rating')
+                    };
+                } else {
+                    manualRowEls.push(tr);
+                }
+            });
+
+            tbody.innerHTML = '';
+            for (let t = 1; t <= groupData.totalPlayers; t++) {
+                const s = sharedData[t];
+                const name = groupData.members && groupData.members[t] ? groupData.members[t] : '';
+                const judgment = preservedJudgments[t] || savedJudgments[t] || { status: '참 (True)', rating: 1 };
+                const rowData = {
+                    speaker: `${t}번 ${name}`,
+                    text: s && s.text ? s.text : '',
+                    logicType: s && s.logicType ? s.logicType : '-',
+                    status: judgment.status,
+                    rating: parseInt(judgment.rating, 10) || 1
+                };
+                addStatementRow(rowData, t, !!(s && s.text));
+            }
+
+            if (firstStatementRender && savedManualRows.length > 0) {
+                savedManualRows.forEach(row => addStatementRow(row, null, false));
+            } else {
+                manualRowEls.forEach(tr => tbody.appendChild(tr));
+            }
+            firstStatementRender = false;
+        }
+
+        // 활동지 결과는 Firebase에도 올려 선생님이 콘솔(Realtime Database)에서
+        // groups/{모둠키}/worksheets/{순번} 경로로 실시간 모니터링할 수 있게 저장,
+        // 동시에 새로고침 대비용으로 localStorage에도 백업합니다.
+        function worksheetPath() {
+            return 'groups/' + mySession.groupKey + '/worksheets/' + mySession.turn;
+        }
+
+        let saveTimer = null;
+        function saveData() {
+            if (!mySession) return;
+            clearTimeout(saveTimer);
+            saveTimer = setTimeout(() => {
+                const judgments = {};
+                const manualRows = [];
+                document.querySelectorAll('#statement-tbody tr').forEach(tr => {
+                    const turnAttr = tr.getAttribute('data-turn');
+                    const status = tr.querySelector('.status-select').value;
+                    const rating = parseInt(tr.querySelector('.star-rating').getAttribute('data-rating') || 1, 10);
+                    if (turnAttr) {
+                        judgments[turnAttr] = { status, rating };
+                    } else {
+                        manualRows.push({
+                            speaker: tr.querySelector('.speaker-input').value,
+                            text: tr.querySelector('.statement-text').value,
+                            status, rating
+                        });
+                    }
+                });
+                savedJudgments = judgments;
+                savedManualRows = manualRows;
+
+                const docData = {
+                    name: mySession.name,
+                    turn: mySession.turn,
+                    date: document.getElementById('student-date').value,
+                    judgments, manualRows,
+                    hypothesis: document.getElementById('hypothesis-note').value,
+                    proofQ1: document.getElementById('proof-q1').value,
+                    proofQ2: document.getElementById('proof-q2').value,
+                    target: document.getElementById('suspect-target').value,
+                    reasonType: document.getElementById('suspect-reason-type').value,
+                    lastUpdated: new Date().toISOString()
+                };
+                localStorage.setItem('liargame_worksheet_' + mySession.groupKey + '_' + mySession.turn, JSON.stringify(docData));
+                db.ref(worksheetPath()).set(docData)
+                    .then(() => flashStatus('저장됨'))
+                    .catch(() => flashStatus('클라우드 저장 실패 (기기에는 저장됨)'));
+            }, 500);
+        }
+
+        // 메타 정보(날짜/추론/저장된 판정)만 불러옵니다. 명제 테이블 자체는
+        // subscribeToStatements()의 실시간 구독이 채우므로 여기서는 건드리지 않습니다.
+        function loadWorksheetMeta(callback) {
+            const localRaw = localStorage.getItem('liargame_worksheet_' + mySession.groupKey + '_' + mySession.turn);
+            const applyData = (data) => {
+                savedJudgments = (data && data.judgments) || {};
+                savedManualRows = (data && data.manualRows) || [];
+                if (!data) { updateReasoningPlaceholder(); if (callback) callback(); return; }
+                document.getElementById('student-date').value = data.date || '';
+                document.getElementById('hypothesis-note').value = data.hypothesis || '';
+                document.getElementById('proof-q1').value = data.proofQ1 || '';
+                document.getElementById('proof-q2').value = data.proofQ2 || '';
+                document.getElementById('suspect-target').value = data.target || '';
+                document.getElementById('suspect-reason-type').value = data.reasonType || '긍정논법';
+                updateReasoningPlaceholder();
+                if (callback) callback();
+            };
+            if (localRaw) {
+                try { applyData(JSON.parse(localRaw)); return; } catch (e) { /* fall through to cloud */ }
+            }
+            db.ref(worksheetPath()).once('value').then(snap => applyData(snap.exists() ? snap.val() : null));
+        }
+
+        // 추론 규칙 선택에 따라 Q3 입력창 예시 문구를 바꿔줍니다.
+        const REASONING_EXAMPLES = {
+            '긍정논법': '예: [모둠원 A]는 "이것이 과일이면 씨앗을 품고 있다"고 말했다. 제시어는 실제로 씨앗이 있다(P 참) → 따라서 A의 발언은 참이어야 한다(Q 참). 만약 A가 이와 모순되는 다른 말을 했다면 그 발언은 거짓, 즉 A가 라이어다.',
+            '삼단논법': '예: [모둠원 A] "P이면 Q이다" + [모둠원 B] "Q이면 R이다" → "P이면 R이다"가 성립해야 한다. 그런데 [모둠원 C]가 "P이면 R이 아니다"라고 말했다면 C의 발언이 모순되므로 C가 라이어다.',
+            '귀납적추론': '예: 여러 시민의 참인 진술을 종합하면 제시어는 "둥글고 씨앗이 있으며 나무에서 자란다"는 공통점을 가진다. 이 가설에 들어맞지 않는 유일한 진술을 한 사람이 라이어일 가능성이 높다.',
+            '기타': '연역적 근거: 모둠원 1, 2, 4의 명제는 제시어의 참인 성질과 일치하는 반면, 모둠원 3의 명제만 유일하게 기존 전제들과 결합 시 모순을 일으키므로 필연적으로 모둠원 3이 라이어임.'
+        };
+
+        function updateReasoningPlaceholder() {
+            const sel = document.getElementById('suspect-reason-type');
+            const box = document.getElementById('proof-q2');
+            if (!sel || !box) return;
+            box.placeholder = REASONING_EXAMPLES[sel.value] || REASONING_EXAMPLES['기타'];
+        }
+
+        function handleReasoningTypeChange() {
+            updateReasoningPlaceholder();
+            saveData();
+        }
+
+        // ---------- STEP 5: 라이어 투표 ----------
+        function setupVoteStep() {
+            renderVoteOptions();
+            document.getElementById('vote-tally-box').classList.add('hidden');
+            document.getElementById('vote-status').classList.add('hidden');
+            const rb = document.getElementById('reveal-answer-box');
+            rb.classList.add('hidden');
+            rb.innerHTML = '';
+            subscribeToVotes();
+        }
+
+        function renderVoteOptions() {
+            const el = document.getElementById('vote-options');
+            if (!el || !groupData) return;
+            const members = groupData.members || {};
+            let html = '';
+            Object.keys(members).sort((a, b) => a - b).forEach(t => {
+                const isMe = mySession && String(mySession.turn) === String(t);
+                html += `<label class="flex items-center space-x-2 p-2.5 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50">
+                    <input type="radio" name="vote-choice" value="${t}" class="w-4 h-4 text-indigo-600">
+                    <span class="text-sm font-medium text-slate-800">${t}번 ${escapeHtml(members[t])}${isMe ? ' (나)' : ''}</span>
+                </label>`;
+            });
+            el.innerHTML = html;
+        }
+
+        function submitVote() {
+            const checked = document.querySelector('input[name="vote-choice"]:checked');
+            if (!checked) { alert('투표할 대상을 선택해주세요.'); return; }
+            if (!mySession) return;
+            db.ref('groups/' + mySession.groupKey + '/votes/' + mySession.turn).set({
+                votedFor: parseInt(checked.value, 10),
+                voterName: mySession.name,
+                votedAt: Date.now()
+            }).then(() => {
+                flashStatus('투표가 제출되었습니다');
+            }).catch(() => flashStatus('투표 제출 실패 - 네트워크를 확인해주세요'));
+        }
+
+        function subscribeToVotes() {
+            if (!mySession) return;
+            if (votesListenerRef) votesListenerRef.off('value');
+            votesListenerRef = db.ref('groups/' + mySession.groupKey + '/votes');
+            votesListenerRef.on('value', (snap) => {
+                const votes = snap.exists() ? snap.val() : {};
+                const myVote = votes[mySession.turn];
+                if (myVote) {
+                    document.getElementById('vote-status').classList.remove('hidden');
+                    const myChecked = document.querySelector(`input[name="vote-choice"][value="${myVote.votedFor}"]`);
+                    if (myChecked) myChecked.checked = true;
+                    document.getElementById('vote-tally-box').classList.remove('hidden');
+                    renderVoteTally(votes);
+                }
+            });
+        }
+
+        function refreshVotes() {
+            if (!mySession) return;
+            db.ref('groups/' + mySession.groupKey + '/votes').once('value').then(snap => {
+                renderVoteTally(snap.exists() ? snap.val() : {});
+                flashStatus('투표 현황을 새로고침했습니다');
+            });
+        }
+
+        function renderVoteTally(votes) {
+            const el = document.getElementById('vote-tally-list');
+            if (!el || !groupData) return;
+            const counts = {};
+            Object.values(votes).forEach(v => { counts[v.votedFor] = (counts[v.votedFor] || 0) + 1; });
+            const totalVotes = Object.keys(votes).length;
+            const members = groupData.members || {};
+            const totalMembers = Object.keys(members).length;
+            let html = `<div class="text-slate-500 mb-1">${totalVotes} / ${totalMembers}명 투표 완료</div>`;
+            Object.keys(members).sort((a, b) => a - b).forEach(t => {
+                const c = counts[t] || 0;
+                const pct = totalVotes ? Math.round((c / totalVotes) * 100) : 0;
+                html += `<div class="flex items-center space-x-2">
+                    <span class="w-20 shrink-0 font-medium text-slate-700">${t}번 ${escapeHtml(members[t])}</span>
+                    <div class="flex-1 bg-slate-200 rounded-full h-3 overflow-hidden"><div class="bg-indigo-500 h-3" style="width:${pct}%"></div></div>
+                    <span class="w-10 text-right text-slate-500">${c}표</span>
+                </div>`;
+            });
+            el.innerHTML = html;
+
+            // 모둠원 전원이 투표를 마쳐야 정답 공개 버튼이 활성화됩니다.
+            const btn = document.getElementById('btn-reveal-answer');
+            const btnText = document.getElementById('btn-reveal-answer-text');
+            if (btn && btnText) {
+                const allVoted = totalMembers > 0 && totalVotes >= totalMembers;
+                btn.disabled = !allVoted;
+                if (allVoted) {
+                    btn.className = 'px-6 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl shadow-md transition flex items-center space-x-2';
+                    btnText.innerText = '정답 공개';
+                } else {
+                    btn.className = 'px-6 py-2.5 bg-slate-300 text-white font-bold rounded-xl shadow-md transition flex items-center space-x-2 cursor-not-allowed';
+                    btnText.innerText = `정답 공개 (${totalVotes}/${totalMembers}명 투표 완료)`;
+                }
+            }
+        }
+
+        function revealAnswer() {
+            if (!mySession || !groupData) return;
+            const checked = document.querySelector('input[name="vote-choice"]:checked');
+            if (!checked) { alert('먼저 투표를 제출해야 정답을 확인할 수 있습니다.'); return; }
+
+            const totalMembers = Object.keys(groupData.members || {}).length;
+            db.ref('groups/' + mySession.groupKey + '/votes').once('value').then(snap => {
+                const votes = snap.exists() ? snap.val() : {};
+                const totalVotes = Object.keys(votes).length;
+                if (totalVotes < totalMembers) {
+                    alert(`아직 투표하지 않은 모둠원이 있습니다. (${totalVotes}/${totalMembers}명 투표 완료)`);
+                    renderVoteTally(votes);
+                    return;
+                }
+
+                const box = document.getElementById('reveal-answer-box');
+                box.classList.remove('hidden');
+                const liarName = (groupData.members || {})[groupData.liarTurn] || '알 수 없음';
+                const myVoteCorrect = parseInt(checked.value, 10) === groupData.liarTurn;
+                box.className = 'max-w-md mx-auto mt-6 rounded-xl p-5 border-2 text-center ' + (myVoteCorrect ? 'bg-emerald-50 border-emerald-300' : 'bg-rose-50 border-rose-300');
+                box.innerHTML = `
+                    <h4 class="text-lg font-black ${myVoteCorrect ? 'text-emerald-800' : 'text-rose-700'}">
+                        <i class="fa-solid fa-user-secret mr-1"></i> 정답: ${groupData.liarTurn}번 ${escapeHtml(liarName)}
+                    </h4>
+                    <p class="text-xs mt-1 ${myVoteCorrect ? 'text-emerald-700' : 'text-rose-600'}">
+                        ${myVoteCorrect ? '내 투표가 정답이었습니다!' : '내 투표는 정답과 달랐습니다. 명제 기록표를 다시 살펴보며 논리를 점검해보세요.'}
+                    </p>`;
+            });
+        }
+    </script>
+</body>
+</html>
