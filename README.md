@@ -1,4 +1,4 @@
-# 2026_shinseong_211_AI class
+# 2026_shinseong_AI class
 
 <details>
 <summary>2026 인공지능 기초 수업자료 링크</summary>
