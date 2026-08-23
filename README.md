@@ -1,10 +1,15 @@
+---
+layout: default
+title: 2026 신성고 정보과학·인공지능 수업
+---
+
 # 2026_shinseong_AI class
 
 <details>
 <summary>2026 인공지능 기초 수업자료 링크</summary>
 
 - [1단원 자료](https://canva.link/ohxx81dg1sthqt5)
-- <a href="https://raw.githubusercontent.com/padong/2026_shinseong_AI_Class/main/logic-liar-game.html" download>logic-liar-game.html 다운로드</a>
+- <a href="https://padong.github.io/2026_shinseong_AI_Class/logic-liar-game.html" download>logic-liar-game.html 다운로드</a>
 
 </details>
 
