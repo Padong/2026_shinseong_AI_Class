@@ -1,9 +1,14 @@
 #!/usr/bin/env python3
 """
 README.md -> index.html 빌드 스크립트
-- README.md 맨 위 <details> 블록(수업 자료 링크)을 카드로 변환
-- 두 번째 <details> 블록(README 작성법 가이드)을 접이식 섹션으로 변환
-- 나머지(hero, CSS, footer)는 고정 템플릿 유지
+
+README.md 규칙:
+- 맨 위 프런트매터(title) 유지
+- <details> 블록 정확히 2개, 순서대로: [1] 수업 자료 링크  [2] README 가이드
+- 수업 자료 링크는 마크다운 리스트로 작성:
+    - [카드 제목](링크)              <- 카드 하나 생성 (기본 버튼)
+      - <a href="링크" download>파일명</a>   <- 같은 카드 안에 보조 버튼으로 추가 (2칸 들여쓰기)
+  즉, 하위(들여쓰기)로 넣은 링크는 같은 카드 안 "추가 자료" 버튼이 됩니다.
 """
 import re
 import sys
@@ -14,6 +19,11 @@ try:
 except ImportError:
     sys.exit("markdown 패키지가 필요합니다: pip install markdown")
 
+try:
+    from bs4 import BeautifulSoup
+except ImportError:
+    sys.exit("beautifulsoup4 패키지가 필요합니다: pip install beautifulsoup4")
+
 ROOT = Path(__file__).parent
 README = ROOT / "README.md"
 OUT = ROOT / "index.html"
@@ -22,6 +32,8 @@ SITE_TITLE = "신성여고 정보과학 수업 자료실"
 SITE_LEDE = "수업에서 쓰는 자료와 실습 파일을 여기서 받아가세요."
 EYEBROW = "2026 · 정보과학 · 인공지능 기초"
 REPO_URL = "https://github.com/Padong/2026_shinseong_AI_Class"
+
+LABELS = ["P₁", "P₂", "P₃", "P₄", "P₅", "P₆", "P₇", "P₈"]
 
 
 def strip_front_matter(text: str):
@@ -37,34 +49,62 @@ def strip_front_matter(text: str):
 
 
 def extract_details_blocks(text: str):
-    """<details><summary>..</summary>..</details> 블록들을 순서대로 추출"""
     pattern = re.compile(r"<details>\s*<summary>(.*?)</summary>(.*?)</details>", re.DOTALL)
     return [(m.group(1).strip(), m.group(2).strip()) for m in pattern.finditer(text)]
 
 
+def action_button(href: str, text: str, is_download: bool, primary: bool) -> str:
+    if is_download:
+        cls = "btn btn-signal" if primary else "btn btn-signal btn-sm"
+        extra = f'\n        <a class="card-link" href="{href}" target="_blank" rel="noopener">웹에서 바로 열기 →</a>'
+        return f'<a class="{cls}" href="{href}" download>{text} ↓</a>{extra if primary else ""}'
+    cls = "btn btn-primary" if primary else "btn btn-primary btn-sm"
+    return f'<a class="{cls}" href="{href}" target="_blank" rel="noopener">{text} ↗</a>'
+
+
 def build_material_cards(materials_md: str) -> str:
-    """마크다운 리스트(- [텍스트](url) 또는 - <a href="url" download>텍스트</a>)를 카드로 변환"""
-    html = markdown.markdown(materials_md, extensions=["fenced_code"])
-    items = re.findall(r"<li>(.*?)</li>", html, re.DOTALL)
+    html = markdown.markdown(materials_md, extensions=["fenced_code", "sane_lists"])
+    soup = BeautifulSoup(html, "html.parser")
+    top_ul = soup.find("ul")
+    if top_ul is None:
+        return ""
+
     cards = []
-    labels = ["P₁", "P₂", "P₃", "P₄", "P₅", "P₆"]
-    for i, item in enumerate(items):
-        a_match = re.search(r'<a\s+href="([^"]+)"([^>]*)>(.*?)</a>', item, re.DOTALL)
-        if not a_match:
+    for i, li in enumerate(top_ul.find_all("li", recursive=False)):
+        # 이 li 바로 아래(중첩 목록 제외)에 있는 첫 번째 <a> = 카드의 주 링크/제목
+        nested_ul = li.find("ul")
+        direct_a = None
+        for a in li.find_all("a", recursive=False):
+            direct_a = a
+            break
+        if direct_a is None:
+            # <li>[텍스트](url) 형태는 <a>가 li 바로 아래에 직접 옴
+            direct_a = li.find("a")
+
+        if direct_a is None:
             continue
-        href, attrs, text = a_match.group(1), a_match.group(2), a_match.group(3).strip()
-        is_download = "download" in attrs
-        label = labels[i] if i < len(labels) else f"P{i+1}"
-        if is_download:
-            btn = (f'<a class="btn btn-signal" href="{href}" download>다운로드 ↓</a>\n'
-                   f'          <a class="card-link" href="{href}" target="_blank" rel="noopener">웹에서 바로 열기 →</a>')
-        else:
-            btn = f'<a class="btn btn-primary" href="{href}" target="_blank" rel="noopener">자료 열기 ↗</a>'
+
+        title = direct_a.get_text(strip=True)
+        href = direct_a.get("href", "#")
+        is_dl = direct_a.has_attr("download")
+        label = LABELS[i] if i < len(LABELS) else f"P{i+1}"
+
+        buttons = [action_button(href, "다운로드" if is_dl else "자료 열기", is_dl, primary=True)]
+
+        if nested_ul:
+            for sub_a in nested_ul.find_all("a"):
+                sub_title = sub_a.get_text(strip=True)
+                sub_href = sub_a.get("href", "#")
+                sub_dl = sub_a.has_attr("download")
+                buttons.append(action_button(sub_href, sub_title, sub_dl, primary=False))
+
+        buttons_html = "\n        ".join(buttons)
         cards.append(f'''      <div class="card">
         <div class="tag">{label} · 자료</div>
-        <h3>{text}</h3>
-        {btn}
+        <h3>{title}</h3>
+        {buttons_html}
       </div>''')
+
     return "\n\n".join(cards)
 
 
