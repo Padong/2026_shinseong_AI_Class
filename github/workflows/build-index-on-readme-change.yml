@@ -24,7 +24,7 @@ jobs:
           python-version: '3.x'
 
       - name: 의존 패키지 설치
-        run: pip install markdown
+        run: pip install markdown beautifulsoup4
 
       - name: index.html 빌드
         run: python build_index.py
