@@ -104,52 +104,67 @@
 
     <main class="flex-grow py-6 px-2 sm:px-4">
 
-        <!-- ================= STEP 1: 모둠 입장 ================= -->
-        <section id="step-join" class="a4-paper">
+        <!-- ================= STEP 1a: 닉네임 입력 ================= -->
+        <section id="step-nickname" class="a4-paper">
             <div class="text-center border-b-2 border-slate-900 pb-5 mb-6">
                 <div class="inline-block px-3 py-1 bg-indigo-50 border border-indigo-200 text-indigo-700 rounded-full text-xs font-extrabold uppercase tracking-wider mb-2">STEP 1</div>
-                <h1 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">모둠에 입장하기</h1>
-                <p class="text-xs sm:text-sm text-slate-500 mt-1 font-medium">같은 모둠원은 <strong>모둠명을 똑같이</strong> 입력하면 서로 연결됩니다. 처음 입장하는 사람이 모둠 설정을 만듭니다.</p>
+                <h1 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">닉네임 입력하기</h1>
+                <p class="text-xs sm:text-sm text-slate-500 mt-1 font-medium">게임에서 사용할 이름을 입력하면 방 목록으로 이동합니다.</p>
             </div>
 
-            <div class="max-w-md mx-auto space-y-4">
+            <div class="max-w-sm mx-auto space-y-4">
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 mb-1">모둠명 <span class="text-rose-500">*</span></label>
-                    <input type="text" id="join-group" class="doc-input w-full font-bold text-slate-800 px-1 py-1.5 text-base" placeholder="예: 2모둠 (피타고라스)">
+                    <label class="block text-xs font-bold text-slate-500 mb-1">닉네임 <span class="text-rose-500">*</span></label>
+                    <input type="text" id="nickname-input" maxlength="12" class="doc-input w-full font-bold text-slate-800 px-1 py-1.5 text-base" placeholder="예: 홍길동" onkeydown="if(event.key==='Enter') confirmNickname()">
                 </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-bold text-slate-500 mb-1">나의 순번 <span class="text-rose-500">*</span></label>
-                        <input type="number" id="join-turn" min="1" max="8" class="doc-input w-full font-bold text-slate-800 px-1 py-1.5" placeholder="1">
+                <button onclick="confirmNickname()" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-md transition flex items-center justify-center space-x-2">
+                    <span>다음</span><i class="fa-solid fa-arrow-right"></i>
+                </button>
+                <p id="nickname-error" class="hidden text-xs text-rose-600 font-semibold text-center"></p>
+            </div>
+        </section>
+
+        <!-- ================= STEP 1b: 방 만들기 / 참가하기 ================= -->
+        <section id="step-lobby" class="a4-paper hidden">
+            <div class="text-center border-b-2 border-slate-900 pb-5 mb-6">
+                <div class="inline-block px-3 py-1 bg-indigo-50 border border-indigo-200 text-indigo-700 rounded-full text-xs font-extrabold uppercase tracking-wider mb-2">STEP 1</div>
+                <h1 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">방 만들기 · 참가하기</h1>
+                <p class="text-xs sm:text-sm text-slate-500 mt-1 font-medium"><span id="lobby-nickname-display" class="font-bold text-indigo-700"></span>님, 참가할 방을 선택하거나 새 방을 만드세요.</p>
+            </div>
+
+            <div class="max-w-lg mx-auto space-y-6">
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-bold text-slate-600"><i class="fa-solid fa-door-open mr-1"></i> 참가 가능한 방</span>
+                        <button onclick="subscribeToRoomList()" class="no-print text-xs text-indigo-600 hover:text-indigo-800 font-medium"><i class="fa-solid fa-rotate mr-1"></i>새로고침</button>
                     </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-500 mb-1">이름 <span class="text-rose-500">*</span></label>
-                        <input type="text" id="join-name" class="doc-input w-full font-bold text-slate-800 px-1 py-1.5" placeholder="홍길동">
-                    </div>
+                    <div id="room-list" class="space-y-2 max-h-64 overflow-y-auto pr-1"></div>
+                    <p id="room-list-empty" class="hidden text-xs text-slate-400 text-center py-4">오늘 만들어진 방이 아직 없습니다. 아래에서 새 방을 만들어보세요! (방 목록은 매일 자정에 초기화됩니다)</p>
                 </div>
 
-                <div id="join-new-group-fields" class="bg-indigo-50/60 border border-indigo-100 rounded-lg p-3.5 space-y-3">
-                    <p class="text-xs text-indigo-800 font-semibold"><i class="fa-solid fa-circle-info mr-1"></i> 아직 만들어지지 않은 모둠명이면, 아래 설정으로 새 모둠이 생성됩니다.</p>
+                <div class="bg-indigo-50/60 border border-indigo-100 rounded-lg p-3.5 space-y-3">
+                    <p class="text-xs text-indigo-800 font-semibold"><i class="fa-solid fa-circle-plus mr-1"></i> 새 방 만들기</p>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1">방 이름 <span class="text-rose-500">*</span></label>
+                        <input type="text" id="create-room-name" class="w-full text-sm p-2 border border-slate-300 rounded-lg outline-none focus:border-indigo-600" placeholder="예: 2모둠 (피타고라스)" onkeydown="if(event.key==='Enter') createRoom()">
+                    </div>
                     <div class="grid grid-cols-2 gap-3">
                         <div>
-                            <label class="block text-xs font-bold text-slate-600 mb-1">모둠 총 인원</label>
-                            <input type="number" id="join-total" min="3" max="8" value="4" class="w-full text-sm p-2 border border-slate-300 rounded-lg outline-none focus:border-indigo-600">
+                            <label class="block text-xs font-bold text-slate-600 mb-1">인원 수</label>
+                            <input type="number" id="create-room-total" min="3" max="8" value="4" class="w-full text-sm p-2 border border-slate-300 rounded-lg outline-none focus:border-indigo-600">
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-slate-600 mb-1">제시어 카테고리</label>
-                            <select id="join-category" class="w-full text-sm p-2 border border-slate-300 rounded-lg outline-none focus:border-indigo-600">
-                                <option value="math">수학 개념</option>
-                                <option value="fruit">과일/음식</option>
-                                <option value="animal">동물/자연</option>
-                            </select>
+                            <label class="block text-xs font-bold text-slate-600 mb-1">키워드</label>
+                            <select id="create-room-category" class="w-full text-sm p-2 border border-slate-300 rounded-lg outline-none focus:border-indigo-600"></select>
                         </div>
                     </div>
+                    <button onclick="createRoom()" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-md transition flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-plus"></i><span>방 만들고 입장하기</span>
+                    </button>
                 </div>
 
-                <button onclick="joinGroup()" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-md transition flex items-center justify-center space-x-2">
-                    <i class="fa-solid fa-door-open"></i><span>모둠 입장하기</span>
-                </button>
-                <p id="join-error" class="hidden text-xs text-rose-600 font-semibold text-center"></p>
+                <button onclick="changeNickname()" class="w-full text-xs text-slate-400 hover:text-slate-600 text-center"><i class="fa-solid fa-arrow-left mr-1"></i>닉네임 다시 입력하기</button>
+                <p id="lobby-error" class="hidden text-xs text-rose-600 font-semibold text-center"></p>
             </div>
         </section>
 
@@ -475,12 +490,31 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        const WORD_DATABASE = {
-            math: ['삼각비', '미분계수', '이차함수', '벡터', '명제', '행렬', '피타고라스'],
-            fruit: ['사과', '수박', '바나나', '딸기', '복숭아', '포도'],
-            animal: ['호랑이', '독수리', '돌고래', '사자', '펭귄']
+        const WORD_CATEGORIES = {
+            math:      { label: '수학 개념',   words: ['삼각비', '미분계수', '이차함수', '벡터', '명제', '행렬', '피타고라스', '함수', '확률', '집합', '무리수', '수열'] },
+            science:   { label: '과학 개념',   words: ['중력', '광합성', '원자', '전류', '유전자', '지진', '화산', '대기압', '부력', '자기장'] },
+            fruit:     { label: '과일/음식',   words: ['사과', '수박', '바나나', '딸기', '복숭아', '포도', '김치', '라면', '초콜릿', '아이스크림'] },
+            animal:    { label: '동물/자연',   words: ['호랑이', '독수리', '돌고래', '사자', '펭귄', '나비', '개미', '상어', '부엉이', '코알라'] },
+            job:       { label: '직업',        words: ['의사', '소방관', '요리사', '교사', '개발자', '디자이너', '조종사', '수의사', '변호사', '건축가'] },
+            country:   { label: '나라/도시',   words: ['프랑스', '이집트', '브라질', '호주', '스위스', '케냐', '태국', '아이슬란드', '캐나다', '베트남'] },
+            sport:     { label: '스포츠',      words: ['축구', '농구', '배드민턴', '수영', '양궁', '태권도', '탁구', '클라이밍', '펜싱', '스키'] },
+            transport: { label: '탈것',        words: ['자전거', '지하철', '비행기', '잠수함', '열기구', '스케이트보드', '케이블카', '요트', '기차'] },
+            instrument:{ label: '악기',        words: ['피아노', '바이올린', '드럼', '기타', '플루트', '첼로', '하프', '리코더', '탬버린'] },
+            school:    { label: '학교생활',    words: ['급식', '체육대회', '동아리', '시험기간', '방학', '야자', '수행평가', '조회', '축제'] },
+            weather:   { label: '계절/날씨',   words: ['장마', '태풍', '첫눈', '벚꽃', '무지개', '오로라', '가뭄', '단풍', '황사'] },
+            space:     { label: '우주/천체',   words: ['블랙홀', '은하수', '유성', '혜성', '화성', '인공위성', '일식', '토성', '오로라'] }
         };
 
+        function populateCategorySelect() {
+            const sel = document.getElementById('create-room-category');
+            if (!sel) return;
+            sel.innerHTML = Object.keys(WORD_CATEGORIES).map(key =>
+                `<option value="${key}">${WORD_CATEGORIES[key].label}</option>`
+            ).join('');
+        }
+
+        let myNickname = null;  // 로비 입장 전 입력한 닉네임
+        let roomListRef = null; // 로비 방 목록 실시간 구독
         let mySession = null;   // { groupKey, groupName, turn, name }
         let groupData = null;   // { groupName, totalPlayers, category, liarTurn, word, members: {turn: name} }
         let isLiarMe = false;
@@ -506,6 +540,8 @@
         }
 
         function init() {
+            populateCategorySelect();
+            myNickname = localStorage.getItem('liargame_nickname') || null;
             const saved = localStorage.getItem('liargame_mysession');
             if (saved) {
                 try {
@@ -559,9 +595,15 @@
 
         // ---------- STEP NAV ----------
         function goToStep(n, silent) {
-            ['step-join', 'step-reveal', 'step-prep', 'step-main', 'step-vote'].forEach((id, idx) => {
-                document.getElementById(id).classList.toggle('hidden', idx !== (n - 1));
+            ['step-nickname', 'step-lobby', 'step-reveal', 'step-prep', 'step-main', 'step-vote'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
             });
+            if (n === 1) {
+                if (myNickname) { showLobbyScreen(); } else { showNicknameScreen(); }
+            } else {
+                const stepIdMap = { 2: 'step-reveal', 3: 'step-prep', 4: 'step-main', 5: 'step-vote' };
+                document.getElementById(stepIdMap[n]).classList.remove('hidden');
+            }
             for (let i = 1; i <= 5; i++) {
                 const badge = document.getElementById('badge-' + i);
                 badge.classList.remove('active', 'done', 'pending');
@@ -590,69 +632,188 @@
             el.innerHTML = `<i class="fa-solid fa-cloud-arrow-up mr-1.5"></i> ${msg} (${new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })})`;
         }
 
-        // ---------- STEP 1: JOIN ----------
-        function joinGroup() {
-            const errEl = document.getElementById('join-error');
+        // ---------- STEP 1a: 닉네임 ----------
+        function showNicknameScreen() {
+            document.getElementById('step-nickname').classList.remove('hidden');
+        }
+
+        function confirmNickname() {
+            const errEl = document.getElementById('nickname-error');
             errEl.classList.add('hidden');
+            const val = document.getElementById('nickname-input').value.trim();
+            if (!val) {
+                errEl.innerText = '닉네임을 입력해주세요.';
+                errEl.classList.remove('hidden');
+                return;
+            }
+            myNickname = val;
+            localStorage.setItem('liargame_nickname', myNickname);
+            goToStep(1);
+        }
 
-            const groupNameRaw = document.getElementById('join-group').value.trim();
-            const turn = parseInt(document.getElementById('join-turn').value, 10);
-            const name = document.getElementById('join-name').value.trim();
+        function changeNickname() {
+            myNickname = null;
+            localStorage.removeItem('liargame_nickname');
+            if (roomListRef) { roomListRef.off('value'); roomListRef = null; }
+            const input = document.getElementById('nickname-input');
+            if (input) input.value = '';
+            goToStep(1);
+        }
 
-            if (!groupNameRaw || !turn || !name) {
-                errEl.innerText = '모둠명, 순번, 이름을 모두 입력해주세요.';
+        // ---------- STEP 1b: 로비 (방 목록 / 방 만들기) ----------
+        function showLobbyScreen() {
+            document.getElementById('step-lobby').classList.remove('hidden');
+            document.getElementById('lobby-nickname-display').innerText = myNickname || '';
+            subscribeToRoomList();
+        }
+
+        function subscribeToRoomList() {
+            if (roomListRef) roomListRef.off('value');
+            roomListRef = db.ref('groups');
+            roomListRef.on('value', (snap) => {
+                renderRoomList(snap.exists() ? snap.val() : {});
+            }, () => flashStatus('방 목록을 불러오지 못했습니다'));
+        }
+
+        // 자정이 지나면 목록에서 사라지도록, 방이 "오늘" 만들어졌는지 확인 (기기의 로컬 날짜 기준)
+        function isToday(ts) {
+            if (!ts) return false;
+            const d = new Date(ts);
+            const now = new Date();
+            return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+        }
+
+        function renderRoomList(rooms) {
+            const el = document.getElementById('room-list');
+            const emptyEl = document.getElementById('room-list-empty');
+            if (!el) return;
+            const keys = Object.keys(rooms || {}).filter(k => isToday((rooms[k] || {}).createdAt));
+            emptyEl.classList.toggle('hidden', keys.length > 0);
+
+            keys.sort((a, b) => (rooms[b].createdAt || 0) - (rooms[a].createdAt || 0));
+            let html = '';
+            keys.forEach(key => {
+                const r = rooms[key];
+                const memberCount = Object.keys(r.members || {}).length;
+                const total = r.totalPlayers || 4;
+                const full = memberCount >= total;
+                const catLabel = (WORD_CATEGORIES[r.category] || {}).label || r.category || '';
+                html += `<div class="flex items-center justify-between p-3 border border-slate-200 rounded-lg ${full ? 'bg-slate-50 opacity-60' : 'bg-white hover:border-indigo-300'}">
+                    <div>
+                        <div class="font-bold text-sm text-slate-800">${escapeHtml(r.groupName || key)}</div>
+                        <div class="text-xs text-slate-500 mt-0.5">
+                            <i class="fa-solid fa-people-group mr-1"></i>${memberCount}/${total}명
+                            <span class="mx-1.5">·</span>
+                            <i class="fa-solid fa-tag mr-1"></i>${escapeHtml(catLabel)}
+                        </div>
+                    </div>
+                    <button data-room-key="${escapeHtml(key)}" ${full ? 'disabled' : ''} class="px-3 py-1.5 text-xs font-bold rounded-lg transition ${full ? 'bg-slate-200 text-slate-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700 text-white'}">
+                        ${full ? '가득 참' : '입장'}
+                    </button>
+                </div>`;
+            });
+            el.innerHTML = html;
+        }
+
+        // 방 목록 버튼 클릭 위임 (방 이름에 특수문자가 있어도 안전하게 처리)
+        document.addEventListener('click', (e) => {
+            const btn = e.target.closest('#room-list button[data-room-key]');
+            if (btn && !btn.disabled) joinRoom(btn.dataset.roomKey);
+        });
+
+        function createRoom() {
+            const errEl = document.getElementById('lobby-error');
+            errEl.classList.add('hidden');
+            if (!myNickname) { goToStep(1); return; }
+
+            const nameRaw = document.getElementById('create-room-name').value.trim();
+            const total = parseInt(document.getElementById('create-room-total').value, 10) || 4;
+            const category = document.getElementById('create-room-category').value;
+
+            if (!nameRaw) {
+                errEl.innerText = '방 이름을 입력해주세요.';
                 errEl.classList.remove('hidden');
                 return;
             }
 
-            const groupKey = safeKey(groupNameRaw);
-            const total = parseInt(document.getElementById('join-total').value, 10) || 4;
-            const category = document.getElementById('join-category').value;
-
+            const groupKey = safeKey(nameRaw);
             let abortedReason = null;
 
             db.ref('groups/' + groupKey).transaction((current) => {
-                if (current === null) {
-                    // 새 모둠 생성 (가장 먼저 입장한 사람의 설정을 사용)
-                    if (turn > total) { abortedReason = `순번은 총 인원(${total}명) 이내여야 합니다.`; return; }
-                    const words = WORD_DATABASE[category] || WORD_DATABASE.math;
-                    const word = words[Math.floor(Math.random() * words.length)];
-                    const liarTurn = Math.floor(Math.random() * total) + 1;
-                    const members = {};
-                    members[turn] = name;
-                    return { groupName: groupNameRaw, totalPlayers: total, category, liarTurn, word, round: 1, createdAt: Date.now(), members };
-                } else {
-                    if (turn > current.totalPlayers) { abortedReason = `이 모둠의 총 인원은 ${current.totalPlayers}명입니다. 순번을 확인해주세요.`; return; }
-                    if (!current.members) current.members = {};
-                    current.members[turn] = name;
-                    return current;
+                if (current !== null && isToday(current.createdAt)) {
+                    abortedReason = '이미 있는 방 이름입니다. 다른 이름을 쓰거나 목록에서 입장하세요.';
+                    return;
                 }
+                // current가 없거나 전날 만들어진 방이면(자정 지남) 새 방으로 초기화합니다.
+                const cat = WORD_CATEGORIES[category] || WORD_CATEGORIES.math;
+                const word = cat.words[Math.floor(Math.random() * cat.words.length)];
+                const liarTurn = Math.floor(Math.random() * total) + 1;
+                const members = { 1: myNickname };
+                return { groupName: nameRaw, totalPlayers: total, category, liarTurn, word, round: 1, createdAt: Date.now(), members };
             }).then((result) => {
                 if (!result.committed) {
-                    errEl.innerText = abortedReason || '입장에 실패했습니다. 잠시 후 다시 시도해주세요.';
+                    errEl.innerText = abortedReason || '방 만들기에 실패했습니다. 잠시 후 다시 시도해주세요.';
                     errEl.classList.remove('hidden');
                     return;
                 }
-                mySession = { groupKey, groupName: groupNameRaw, turn, name };
-                localStorage.setItem('liargame_mysession', JSON.stringify(mySession));
-                showSessionBadge();
-                flashStatus('모둠에 입장했습니다');
-                subscribeToGroup(groupKey, () => goToStep(2));
-            }).catch((e) => {
+                enterSession(groupKey, nameRaw, 1, myNickname);
+            }).catch(() => {
                 errEl.innerText = '연결에 실패했습니다. 네트워크 또는 Firebase 규칙을 확인해주세요.';
                 errEl.classList.remove('hidden');
             });
         }
 
+        function joinRoom(groupKey) {
+            const errEl = document.getElementById('lobby-error');
+            errEl.classList.add('hidden');
+            if (!myNickname) { goToStep(1); return; }
+
+            let abortedReason = null;
+            let assignedTurn = null;
+            let assignedGroupName = groupKey;
+
+            db.ref('groups/' + groupKey).transaction((current) => {
+                if (current === null) { abortedReason = '방이 사라졌습니다. 목록을 새로고침해주세요.'; return; }
+                if (!isToday(current.createdAt)) { abortedReason = '이 방은 하루가 지나 만료되었습니다. 새 방을 만들어주세요.'; return; }
+                if (!current.members) current.members = {};
+                const total = current.totalPlayers || 4;
+                let slot = null;
+                for (let t = 1; t <= total; t++) {
+                    if (!current.members[t]) { slot = t; break; }
+                }
+                if (slot === null) { abortedReason = '방 인원이 가득 찼습니다.'; return; }
+                current.members[slot] = myNickname;
+                assignedTurn = slot;
+                assignedGroupName = current.groupName || groupKey;
+                return current;
+            }).then((result) => {
+                if (!result.committed || assignedTurn === null) {
+                    errEl.innerText = abortedReason || '입장에 실패했습니다. 잠시 후 다시 시도해주세요.';
+                    errEl.classList.remove('hidden');
+                    return;
+                }
+                enterSession(groupKey, assignedGroupName, assignedTurn, myNickname);
+            }).catch(() => {
+                errEl.innerText = '연결에 실패했습니다. 네트워크 또는 Firebase 규칙을 확인해주세요.';
+                errEl.classList.remove('hidden');
+            });
+        }
+
+        function enterSession(groupKey, groupName, turn, name) {
+            if (roomListRef) { roomListRef.off('value'); roomListRef = null; }
+            mySession = { groupKey, groupName, turn, name };
+            localStorage.setItem('liargame_mysession', JSON.stringify(mySession));
+            showSessionBadge();
+            flashStatus('방에 입장했습니다');
+            subscribeToGroup(groupKey, () => goToStep(2));
+        }
+
         function leaveGroup() {
-            if (!confirm('현재 모둠에서 나가고 다른 모둠으로 새로 입장하시겠습니까?')) return;
+            if (!confirm('현재 방에서 나가고 다른 방으로 새로 입장하시겠습니까?')) return;
             if (groupListenerRef) { groupListenerRef.off('value'); groupListenerRef = null; }
             localStorage.removeItem('liargame_mysession');
             mySession = null; groupData = null;
             document.getElementById('session-badge').classList.add('hidden');
-            document.getElementById('join-group').value = '';
-            document.getElementById('join-turn').value = '';
-            document.getElementById('join-name').value = '';
             goToStep(1);
         }
 
@@ -664,8 +825,8 @@
 
             const total = groupData.totalPlayers;
             const category = groupData.category;
-            const words = WORD_DATABASE[category] || WORD_DATABASE.math;
-            const word = words[Math.floor(Math.random() * words.length)];
+            const cat = WORD_CATEGORIES[category] || WORD_CATEGORIES.math;
+            const word = cat.words[Math.floor(Math.random() * cat.words.length)];
             const liarTurn = Math.floor(Math.random() * total) + 1;
             const nextRound = (groupData.round || 1) + 1;
 
