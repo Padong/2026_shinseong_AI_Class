@@ -11,6 +11,7 @@ title: 2026 신성여고 정보과학·인공지능 수업
 - [1단원 자료](https://canva.link/ohxx81dg1sthqt5)
     - <a href="https://padong.github.io/2026_shinseong_AI_Class/logic-liar-game.html" download>논리 라이어 게임</a>
 - [2단원 자료](https://canva.link/8gc9jfaehcqbhad)
+    - [Into the World of Computer Science](https://luminousky.com/Visual-Assets-for-CS-Teacher/#ai)
 
 </details>
 
