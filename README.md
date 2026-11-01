@@ -15,6 +15,7 @@ title: 2026 신성여고 정보과학·인공지능 수업
 - 수행평가 계획
     - <a href="https://padong.github.io/2026_shinseong_AI_Class/ai-basics-assessment-plan.pdf" download>평가 계획·기준 PDF</a>
     - [평가 계획·기준 바로 보기](https://padong.github.io/2026_shinseong_AI_Class/ai-basics-assessment-plan.pdf)
+    - [수행평가 일정 보기](https://docs.google.com/spreadsheets/d/1j5AyjeQNQuzj-UtSACPqO4DIV4SsaidTzUrAD8sZvwk/edit?usp=sharing)
 - 수행평가 양식
     - [소논문 양식](https://docs.google.com/document/d/1XKYdAsc5uyvfrd5u23DI2MD00ub2GxeELmz1kl3fpkQ/edit?usp=sharing)
     - <a href="https://docs.google.com/document/d/1XKYdAsc5uyvfrd5u23DI2MD00ub2GxeELmz1kl3fpkQ/export?format=docx" download>소논문 양식 docx</a>
